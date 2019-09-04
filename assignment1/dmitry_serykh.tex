@@ -1,0 +1,102 @@
+\documentclass[a4paper]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage[english]{babel}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+%% \usepackage{subfigure}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{stmaryrd}
+
+\usepackage{a4wide}
+\usepackage{url}
+%% \usepackage[left=2cm,top=2cm,bottom=1.5cm,right=2cm]{geometry}
+
+\lstset{
+  frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  formfeed=newpage,
+  tabsize=4,
+  comment=[l]{\#},
+  breaklines=true,
+  morekeywords={models, lambda, forms}
+}
+
+
+\newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
+\newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
+\newcommand{\avg}[1]{\sum_{i=1}^{#1}X_i}
+%% \newcommand{\dotp}[2]{\langle #1 + #2 \rangle}
+%% \newcommand{\dotp}[2]{\ensuremath{\frac{#1}{#2}}}
+\newcommand{\dotpr}[2]{\langle #1,\; #2 \rangle}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\title{\vspace{-5cm} Assignment 3}
+\author{Dmitry Serykh (qwl888)}
+
+\begin{document}
+\maketitle
+%% \tableofcontents
+
+%% \section*{Introduction}
+%% \label{sec:intro}
+%% This assignment was solved and written by myself, but the exercises were discussed
+%% in a studygroup with following students:
+%% \begin{itemize}
+%% \item Frederik Thorøe
+%% \item Thomas Kawiecki
+%% \end{itemize}
+\section{Grid World}
+\section{Numerical comparison of kl inequality with its relaxations and with Hoeffding’s inequality}
+\section{Occam’s razor with kl inequality}
+\section{Refined Pinsker’s Lower Bound}
+
+
+\section{The Importance of Independence}
+Let us define Bernoulli random variables $X_1, X_2, ..., X_n$ with bias $0.5$.
+Let the value of $X_i$ for $i>1$ be equal the value of $X_0$. Then the value of
+$\sum_{i=1}^{n} X_{i}$ would always be either 0 or 1 and
+$\mu = \mathbb{E}\left[X_{i}\right] = \frac{1}{2} \cdot 0 + \frac{1}{2} \cdot 1 = \frac{1}{2}$.\\
+Hence, the average would not converge to $\mu$ and we have:
+$$
+\mathbb{P}\left\{\left|\mu-\frac{1}{n} \sum_{i=1}^{n} X_{i}\right| \geq \frac{1}{2}\right\}=1
+$$
+
+\end{document}
+
+%% \begin{figure}
+%%   \centering
+%%   \begin{subfigure}[b]{\textwidth}
+%%     \centering
+%%     \includegraphics[scale=0.8]{handin/plt51}
+%%     \caption{Classification of the training set}
+%%   \end{subfigure}
+%%   \begin{subfigure}[b]{\textwidth}
+%%     \centering
+%%     \includegraphics[scale=0.8]{handin/plt52}
+%%     \caption{Classification of the test set}
+%%   \end{subfigure}
+%%   \caption{Exercise 5: Logistic Regression Applied to the Datasets}
+%%   \label{plt5}
+%% \end{figure}
+
+%% \begin{lstlisting}[caption="Calculation of g"]
+%% def calc_g(Xs, y, w):
+%%     N = np.shape(Xs)[0]
+%%     # use matrix X of xs instead of for-loop = much faster
+%%     X = np.c_[Xs, np.ones(N)]
+%%     num = y.T * X
+%%     denum = 1 + np.exp(y * (w @ X.T))
+%%     M = num.T/denum
+%%     # return mean of each row
+%%     return (-1 * np.mean(M, axis=1))
+%% \end{lstlisting}
