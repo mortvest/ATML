@@ -55,7 +55,33 @@
 %% \item Frederik Thorøe
 %% \item Thomas Kawiecki
 %% \end{itemize}
+
 \section{Grid World}
+\label{sec:1}
+\subsection{}
+\label{subsec:11}
+In order to calculate the value function $V^{rand}$ of the random policy, I
+implement a version of the algorithm from the slide 31 in the reinforcement
+learning lecture slides:
+$$
+  V(s) \leftarrow \sum_{a} \pi(s, a)
+  \sum_{s^{\prime}} P_{s s^{\prime}}^{a}\left[R_{s s^{\prime}}^{a}+\gamma
+    V(s^{\prime})\right]
+  $$
+An important observation is that all rewards and
+transitions in this setup are deterministic, hence I can simplify the expression in the update
+stage of the algorithm ($P_{s s^{\prime}}^{a} = 1$ for the transition state and
+0 otherwise):
+\begin{align*}
+  &\sum_{a} \pi(s, a) \sum_{s^{\prime}} P_{s s^{\prime}}^{a}\left[R_{s s^{\prime}}^{a}+\gamma
+    V(s^{\prime})\right] = 
+  \sum_{a} \pi(s, a)
+  \left[R_{s s^{\prime}}^{a} + V(s^{\prime})\right]
+\end{align*}
+where $s^{\prime}$ is the state after the transition. $s^{\prime}$ is found
+by a simple lookup in the transitional mapping.
+
+
 \section{Numerical comparison of kl inequality with its relaxations and with Hoeffding’s inequality}
 \section{Occam’s razor with kl inequality}
 \section{Refined Pinsker’s Lower Bound}
@@ -63,7 +89,7 @@
 
 \section{The Importance of Independence}
 Let us define Bernoulli random variables $X_1, X_2, ..., X_n$ with bias $0.5$.
-Let the value of $X_i$ for $i>1$ be equal the value of $X_0$. Then the value of
+Let the value of $X_i = X_0$ for $i>1$. Then the value of
 $\sum_{i=1}^{n} X_{i}$ would always be either 0 or 1 and
 $\mu = \mathbb{E}\left[X_{i}\right] = \frac{1}{2} \cdot 0 + \frac{1}{2} \cdot 1 = \frac{1}{2}$.\\
 Hence, the average would not converge to $\mu$ and we have:
