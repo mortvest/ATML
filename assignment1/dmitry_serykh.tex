@@ -27,9 +27,8 @@
   tabsize=4,
   comment=[l]{\#},
   breaklines=true,
-  morekeywords={models, lambda, forms}
+  basicstyle=\small
 }
-
 
 \newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
 \newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
@@ -45,24 +44,17 @@
 
 \begin{document}
 \maketitle
-%% \tableofcontents
-
-%% \section*{Introduction}
-%% \label{sec:intro}
-%% This assignment was solved and written by myself, but the exercises were discussed
-%% in a studygroup with following students:
-%% \begin{itemize}
-%% \item Frederik Thorøe
-%% \item Thomas Kawiecki
-%% \end{itemize}
 
 \section{Grid World}
 \label{sec:1}
+In this exercise and this assignment in general, I exclusively used python (with
+\texttt{numpy}, \texttt{matplotlib} and other relevant libraries) for all
+implementation.
 \subsection{}
 \label{subsec:11}
 In order to calculate the value function $V^{rand}$ of the random policy, I
-implement a version of the algorithm from the slide 31 in the reinforcement
-learning lecture slides:
+implement a version of the iterative policy evaluation algorithm from the slide
+31 in the reinforcement learning lecture slides:
 $$
   V(s) \leftarrow \sum_{a} \pi(s, a)
   \sum_{s^{\prime}} P_{s s^{\prime}}^{a}\left[R_{s s^{\prime}}^{a}+\gamma
@@ -79,27 +71,47 @@ stage of the algorithm ($P_{s s^{\prime}}^{a} = 1$ for the transition state and
   \left[R_{s s^{\prime}}^{a} + V(s^{\prime})\right]
 \end{align*}
 where $s^{\prime}$ is the state after the transition. $s^{\prime}$ is found
-by a simple lookup in the transitional mapping.\\
-My implementation can be found in file \texttt{e1.py} in the \textbf{code.zip}
-archive and the resulting value of $V^{rand}$ is:
+by a simple lookup in the transitional mapping. I implemented both mappings and policy
+using $12\times 4$ matrixes, and my implementation can be found in file \texttt{e1.py} in the
+\textbf{code.zip}. The resulting value of $V^{rand}$ (with threshold 0.1) is:
 \begin{verbatim}
-[[-208.6 -206.1 -208.9]
- [-207.2 -191.8 -207.7]
- [-196.8 -173.5 -192.6]
- [-205.8  -88.7    0. ]]
+[[-202.461 -200.126 -202.888]
+ [-201.185 -186.308 -201.934]
+ [-191.192 -168.74  -187.252]
+ [-199.91   -86.331    0.   ]]
 \end{verbatim}
 
 \subsection{}
 \label{subsec:12}
-My implementation can be found in file \texttt{e1.py} in the \textbf{code.zip}
-archive and the resulting value of $V^{*}$ is:
+For this sub-task, I implemented the policy iteration algorithm
+from the slide 37. The state transitions are still deterministic, hence I can
+apply similar simplifications from the previous sub-task. Furthermore, I reuse
+my implementation for the policy evaluation stage. \\\\
+I will then highlight the calculation of \emph{argmax}, which I find
+efficiently by multiplying a $4 \times 4$ identity matrix with the row in the
+reward matrix and the value function of the target states. I then find the index
+of the largest value in the result and return that row of the identity as the
+action of that state.
+A relevant code snippet can be seen on Listing \ref{lst1}.
+
+\begin{lstlisting}[caption="Calculation of argmax\_a", label=lst1]
+def find_best_action(s):
+    diag_mat = np.diag(np.ones(4))
+    diag_mult = diag_mat * (self.rew_mat[s] + self.Vs[self.trans_mat[s]])
+    arr = np.diag(diag_mult)
+    max_ind = np.argmax(arr)
+    res_policy = diag_mat[max_ind]
+    return res_policy
+\end{lstlisting}
+I initialize the algorithm with a random policy $V=0$ and use the same value of
+$\theta$ as in the first sub-task. My implementation can be found in file
+\texttt{e1.py} in \textbf{code.zip} and the resulting value of $V^{*}$ is:
 \begin{verbatim}
 [[-10.  -9. -10.]
  [ -9.  -3. -11.]
  [ -3.  -2.  -3.]
  [ -9.  -1.   0.]]
 \end{verbatim}
-
 
 
 \section{Numerical comparison of kl inequality with its relaxations and with Hoeffding’s inequality}
@@ -114,9 +126,27 @@ be explicitly written as:
   p \leq \mathrm{kl}^{-1^{+}}\left(\hat{p}_{n}, z\right)
   \end{align*}
 \item $$|p-\hat{p}_n| \leq \sqrt{\frac{\ln \frac{n+1}{\delta}}{2 n}}$$
+  Need to use only one bound
 \item $$ p \leq \hat{p}_n+\sqrt{\frac{2 \hat{p}_n \ln \frac{n+1}{\delta}}{n}}+\frac{2
   \ln \frac{n+1}{\delta}}{n}$$
 \end{enumerate}
+
+\subsection{}
+\label{subsec:22}
+The plot for the given values can be seen on Figure \ref{plt1}.
+
+\subsection{}
+\label{subsec:23}
+The zoomed-in plot for the given values can also be seen on Figure \ref{plt1}.
+
+\subsection{}
+\label{subsec:24}
+I implemented the ``lower inverse'' of kl by modifying the implementation of the
+``upper inverse'', which was based on the provided solution, but implemented in python.
+
+\subsection{}
+\label{subsec:25}
+%% TODO
 
 \section{Occam’s razor with kl inequality}
 I start by looking at inequality (2.11) from the lecture notes, where with
@@ -155,33 +185,83 @@ I prove it by looking at the left-hand side of the inequality:
   &\leq
   \delta
 \end{align*}
-The first inequality holds because of the union bound. The second 
-holds because of (\ref{kl1}) and the fact that $\pi(h)$ is 
-independent from $S$. The last inequality holds because 
+The first inequality holds because of the union bound.\\
+The second inequality holds because of (\ref{kl1}) and the fact that $\pi(h)$ is
+independent from $S$. Otherwise the $kl$ inequality could not be used here, as Lemma 2.14
+from lecture notes is proven for $\varepsilon$ being a scalar value. The
+notion of $\pi$ being dependent on $S$, would make $\varepsilon$ a random
+variable and break the proof.\\
+The last inequality holds because
 $\sum_{h \in \mathcal{H}} \pi(h) \leq 1$. \QEDA
 
 \section{Refined Pinsker’s Lower Bound}
 I need to prove that if $\mathrm{kl}(p \| q) \leq \varepsilon$ then
-$q \geq p-\sqrt{2 p \varepsilon}$. 
-
-\begin{align*}
+$q \geq p-\sqrt{2 p \varepsilon}$. \\
+$0 \leq p,q \leq 1$, since both of them denote a bias of a Bernoulli variable.
+Furthermore, $\varepsilon \geq 0$, because evaluating $\mathrm{kl}(p \| q)$ always yields
+a non-negative result. I will then consider two following cases:
+\begin{enumerate}
+\item $p \geq q$\\
+  I start by looking at Lemma 1.18 in the lecture notes:
+  \[
+  \mathrm{kl}(p \| q) \geq
   \frac{(p-q)^{2}}{2 \max \{p, q\}}+\frac{(p-q)^{2}}{2 \max \{(1-p),(1-q)\}}
-  \leq \varepsilon
+  \]
+  Since $\mathrm{kl}(p \| q) \leq \varepsilon$:
+  \begin{align*}
+    \varepsilon &\geq
+    \frac{(p-q)^{2}}{2 \max \{p, q\}}+\frac{(p-q)^{2}}{2 \max \{(1-p),(1-q)\}}\\
+    &\geq
+    \frac{(p-q)^{2}}{2 \max \{p, q\}}
+    \tag{since $\varepsilon,p,q \geq 0$}\\
+    &=
+    \frac{(p-q)^{2}}{2p}
+      \tag{since $p \geq q$}
 \end{align*}
+  I then solve for $q$:
+  \begin{align*}
+    \varepsilon &\geq \frac{(p-q)^{2}}{2p} \\
+    2p\varepsilon &\geq (p-q)^{2} \tag{since $p \geq 0$}\\
+    \sqrt{2p\varepsilon} &\geq p-q \\
+    q &\geq p-\sqrt{2 p \varepsilon} \tag{since $q \geq 0$}\\
+  \end{align*}
+    The penultimate step is valid, since both sides of the inequality are positive and
+    square root is a monotonically increasing, non-negative function.
+\item $q \geq p$:\\
+  This case is trivial to see, as both $p, \varepsilon$ are non-negative.
+  The same holds for the square root function, therefore
+  $\sqrt{2 p \varepsilon} \geq 0$. Hence:
+  \begin{align*}
+    q \geq p-\sqrt{2 p \varepsilon} \tag{since $q \geq p$ in this case}
+  \end{align*}
+\end{enumerate}
+\QEDA
 
-$$
-q \leq p+\sqrt{2 p \varepsilon}+2 \varepsilon
-$$
 \section{The Importance of Independence}
 Let us define Bernoulli random variables $X_1, X_2, ..., X_n$ with bias $0.5$.
-Let the value of $X_i = X_0$ for $i>1$. Then the value of
+Let them also be dependent, such that the value of $X_i = X_0$ for $i>1$. Then the value of
 $\sum_{i=1}^{n} X_{i}$ would always be either 0 or 1 and
 $\mu = \mathbb{E}\left[X_{i}\right] = \frac{1}{2} \cdot 0 + \frac{1}{2} \cdot 1 = \frac{1}{2}$.\\
-Hence, the average would not converge to $\mu$ and we have:
+Hence, the average would not converge to $\mu$ and we have for all $n > 0$:
 $$
 \mathbb{P}\left\{\left|\mu-\frac{1}{n} \sum_{i=1}^{n} X_{i}\right| \geq \frac{1}{2}\right\}=1
 $$
 
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{\textwidth}
+    \centering
+    \includegraphics[scale=0.8]{code/plt21}
+    \caption{0 to 1}
+  \end{subfigure}
+  \begin{subfigure}[b]{\textwidth}
+    \centering
+    \includegraphics[scale=0.8]{code/plt22}
+    \caption{Zoomed}
+  \end{subfigure}
+  \caption{Numerical comparison of kl inequality and relaxations with Hoeffding’s inequality}
+  \label{plt1}
+\end{figure}
 \end{document}
 
 %% \begin{figure}
