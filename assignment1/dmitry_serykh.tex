@@ -39,7 +39,7 @@
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
 
-\title{\vspace{-5cm} Assignment 3}
+\title{\vspace{-5cm} Assignment 1}
 \author{Dmitry Serykh (qwl888)}
 
 \begin{document}
@@ -73,7 +73,7 @@ stage of the algorithm ($P_{s s^{\prime}}^{a} = 1$ for the transition state and
 where $s^{\prime}$ is the state after the transition. $s^{\prime}$ is found
 by a simple lookup in the transitional mapping. I implemented both mappings and policy
 using $12\times 4$ matrixes, and my implementation can be found in file \texttt{e1.py} in the
-\textbf{code.zip}. The resulting value of $V^{rand}$ (with threshold 0.1) is:
+\textbf{handin.zip}. The resulting value of $V^{rand}$ (with threshold 0.1) is:
 \begin{verbatim}
 [[-202.461 -200.126 -202.888]
  [-201.185 -186.308 -201.934]
@@ -105,7 +105,7 @@ def find_best_action(s):
 \end{lstlisting}
 I initialize the algorithm with a random policy $V=0$ and use the same value of
 $\theta$ as in the first sub-task. My implementation can be found in file
-\texttt{e1.py} in \textbf{code.zip} and the resulting value of $V^{*}$ is:
+\texttt{e1.py} in \textbf{handin.zip} and the resulting value of $V^{*}$ is:
 \begin{verbatim}
 [[-10.  -9. -10.]
  [ -9.  -3. -11.]
@@ -125,8 +125,12 @@ be explicitly written as:
   \begin{align*}
   p \leq \mathrm{kl}^{-1^{+}}\left(\hat{p}_{n}, z\right)
   \end{align*}
-\item $$|p-\hat{p}_n| \leq \sqrt{\frac{\ln \frac{n+1}{\delta}}{2 n}}$$
-  Need to use only one bound
+  where the value of $z$ is taken from the inequality (2.11) in the lecture notes:
+  $$ \mathrm{kl}(\hat{p} \| p) \leq \frac{\ln \frac{n+1}{\delta}}{n} $$
+\item Pinskers inequality for the binary kl-divergence is given by:
+  $$|p-\hat{p}_n| \leq \sqrt{\frac{\ln \frac{n+1}{\delta}}{2 n}}$$
+  I only need the positive part, hence it can be rewritten:
+  $$p \leq \hat{p}_n + \sqrt{\frac{\ln \frac{n+1}{\delta}}{2 n}}$$
 \item $$ p \leq \hat{p}_n+\sqrt{\frac{2 \hat{p}_n \ln \frac{n+1}{\delta}}{n}}+\frac{2
   \ln \frac{n+1}{\delta}}{n}$$
 \end{enumerate}
@@ -142,11 +146,19 @@ The zoomed-in plot for the given values can also be seen on Figure \ref{plt1}.
 \subsection{}
 \label{subsec:24}
 I implemented the ``lower inverse'' of kl by modifying the implementation of the
-``upper inverse'', which was based on the provided solution, but implemented in python.
+``upper inverse'', which was based on the provided solution in
+python.
+The plot for the given values can be seen on Figure \ref{plt2}.
 
 \subsection{}
 \label{subsec:25}
-%% TODO
+As discussed during the lecture, kl-inequality performs better for the smaller
+values of $\hat{h}_n$ (0 to 0.08) and for the ones close to 1 (0.92 to 1).
+Hoeffding binds tighter for other values. \\
+Hoeffding's bound performs strictly better than Pinsker's relaxation.
+Furthermore, the refined Pinsker's relaxation binds tighter for (0 to 0.03).
+Generally, the difference could be significant when the prediction loss is
+extremely low.
 
 \section{Occam’s razor with kl inequality}
 I start by looking at inequality (2.11) from the lecture notes, where with
@@ -261,6 +273,13 @@ $$
   \end{subfigure}
   \caption{Numerical comparison of kl inequality and relaxations with Hoeffding’s inequality}
   \label{plt1}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[scale=0.8]{code/plt23}
+  \caption{Numerical comparison of kl lower bound with Hoeffding’s inequality}
+  \label{plt2}
 \end{figure}
 \end{document}
 
