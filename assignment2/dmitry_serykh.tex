@@ -1,0 +1,143 @@
+\documentclass[a4paper]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+%% \usepackage{subfigure}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{stmaryrd}
+\usepackage{a4wide}
+
+\lstset{
+  frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  formfeed=newpage,
+  tabsize=4,
+  comment=[l]{\#},
+  breaklines=true,
+  basicstyle=\small
+}
+
+\newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
+\newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
+\newcommand{\avg}[1]{\sum_{i=1}^{#1}X_i}
+%% \newcommand{\dotp}[2]{\langle #1 + #2 \rangle}
+%% \newcommand{\dotp}[2]{\ensuremath{\frac{#1}{#2}}}
+\newcommand{\dotpr}[2]{\langle #1,\; #2 \rangle}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+
+\title{\vspace{-5cm} Assignment 2}
+\author{Dmitry Serykh (qwl888)}
+
+\begin{document}
+\maketitle
+
+\section{Policy Evaluation}
+\label{sec:1}
+
+\section{Maze Example}
+\label{sec:2}
+\subsection{}
+\label{subsec:21}
+I start by looking at the expression on the slide 19 in the RL lecture slides that states:
+\[
+V^{\pi}(s)
+=\sum_{a} \pi(s, a) \sum_{s^{\prime}} P_{s s^{\prime}}^{a}
+\left[R_{s s^{\prime}}^{a}+\gamma V^{\pi}\left(s^{\prime}\right)\right]
+\]
+It can be deducted from the rightmost picture that the policy $\pi$ is
+deterministic (the arrow shows the action in each state), hence
+$\pi(s,a) = \{0,1\}$. Therefore:
+\[
+V^{\pi}(s) =\sum_{s^{\prime}} P_{s s^{\prime}}^{a}
+\left[R_{s s^{\prime}}^{a}+\gamma V^{\pi}\left(s^{\prime}\right)\right]
+\]
+where $a$ is an action in the state, determined by $\pi$.\\
+Moreover, similarly to the first exercise in Assignment 1, that all rewards and
+transitions are deterministic. Hence, I can simplify the expression:
+\begin{align}
+  \label{V_pi}
+  V^{\pi}(s) = \sum_{s^{\prime}} R_{s s^{\prime}}^{a}+\gamma V^{\pi}\left(s^{\prime}\right)
+\end{align}
+According to the assignment text, any action in the goal state lets me stay in
+the goal state. Furthermore, staying in the goal state gives an immediate reward of 1,
+hence $s^{\prime}$ can only equal $G$ when $s = G$. Therefore I can further simplify
+the expression:
+\begin{align*}
+  V^{\pi}(G) &= R_{G G}^{a}+\gamma V^{\pi}\left(G\right) \\
+  &= 1 + 0.9 \cdot V^{\pi}(G)
+\end{align*}
+I can solve for $V^{\pi}(G)$ and get:
+\[
+V^{\pi}(G) = 10
+\]
+\QEDA
+
+\subsection{}
+\label{subsec:21}
+Let $G_{left}$ and $G_{below}$ represent the states to the left and below of
+state $G$ respectively. I start by looking at (\ref{V_pi}):
+\begin{align*}
+  V^{\pi}(s) = \sum_{s^{\prime}} R_{s s^{\prime}}^{a}+\gamma V^{\pi}\left(s^{\prime}\right)
+\end{align*}
+For both $G_{left}$ and $G_{below}$, the only transition state is $G$ (since
+$\pi$ is deterministic). Furthermore, the reward of transition from one state to
+another, while not leaving the world is 0, and I know the value of $V^{\pi}(G)$, hence:
+\begin{align*}
+  V^{\pi}(G_{left}) &= R_{G G_{left}}^{a}+\gamma V^{\pi}(G) \\
+  V^{\pi}(G_{left}) &= 0+0.9 V^{\pi}(G) \\
+  V^{\pi}(G_{left}) &= 9 \\
+\end{align*}
+The same logic can be applied to the calculation of $V^{\pi}(G)$, hence:
+\[
+  V^{\pi}(G_{below}) = V^{\pi}(G_{left}) = 9 \\
+\]
+\QEDA
+\section{PAC-Bayes vs. Occam}
+\label{sec:3}
+
+\section{Nonnegativity of KL}
+\label{sec:4}
+
+\end{document}
+
+%% \begin{figure}
+%%   \centering
+%%   \begin{subfigure}[b]{\textwidth}
+%%     \centering
+%%     \includegraphics[scale=0.8]{handin/plt51}
+%%     \caption{Classification of the training set}
+%%   \end{subfigure}
+%%   \begin{subfigure}[b]{\textwidth}
+%%     \centering
+%%     \includegraphics[scale=0.8]{handin/plt52}
+%%     \caption{Classification of the test set}
+%%   \end{subfigure}
+%%   \caption{Exercise 5: Logistic Regression Applied to the Datasets}
+%%   \label{plt5}
+%% \end{figure}
+
+%% \begin{lstlisting}[caption="Calculation of g"]
+%% def calc_g(Xs, y, w):
+%%     N = np.shape(Xs)[0]
+%%     # use matrix X of xs instead of for-loop = much faster
+%%     X = np.c_[Xs, np.ones(N)]
+%%     num = y.T * X
+%%     denum = 1 + np.exp(y * (w @ X.T))
+%%     M = num.T/denum
+%%     # return mean of each row
+%%     return (-1 * np.mean(M, axis=1))
+%% \end{lstlisting}
