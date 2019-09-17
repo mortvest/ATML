@@ -44,9 +44,10 @@
 
 \begin{document}
 \maketitle
-
 \section{Policy Evaluation}
 \label{sec:1}
+\newpage
+
 
 \section{Maze Example}
 \label{sec:2}
@@ -98,19 +99,146 @@ $\pi$ is deterministic). Furthermore, the reward of transition from one state to
 another, while not leaving the world is 0, and I know the value of $V^{\pi}(G)$, hence:
 \begin{align*}
   V^{\pi}(G_{left}) &= R_{G G_{left}}^{a}+\gamma V^{\pi}(G) \\
-  V^{\pi}(G_{left}) &= 0+0.9 V^{\pi}(G) \\
+  V^{\pi}(G_{left}) &= 0+0.9 \cdot 10 \\
   V^{\pi}(G_{left}) &= 9 \\
 \end{align*}
-The same logic can be applied to the calculation of $V^{\pi}(G)$, hence:
+Same logic can be applied to the calculation of $V^{\pi}(G)$, hence:
 \[
   V^{\pi}(G_{below}) = V^{\pi}(G_{left}) = 9 \\
 \]
 \QEDA
+\newpage
+
 \section{PAC-Bayes vs. Occam}
 \label{sec:3}
+\subsection{}
+\label{subsec:31}
+I start by rewriting an expression:
+\[
+\ln \frac{n+1}{\pi(h) \delta} 
+=\ln{\frac{1}{\pi(h)} \cdot \frac{(n+1)}{\delta}}
+=\ln{\frac{1}{\pi(h)}} + \ln{\frac{(n+1)}{\delta}}
+\]
+That would be useful later. \\
+I start by looking at the lhs of Theorem 1. KL is convex in $p$ and $q$, hence
+Jensen's inequality $(\expect{f(x)} \geq f \expect{x})$ can be used:
+%% \mathrm{k} 1\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
+%% \mathbb{E}_{\rho}[L(h)]\right) \leq
+%% \frac{\sum_{h \in \mathcal{H}} \rho(h) \ln \frac{1}{\pi(h)}+\ln \frac{n+1}{\delta}}{n}
+\begin{align*}
+\mathrm{kl}\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
+\mathbb{E}_{\rho}[L(h)]\right) &\leq
+\mathbb{E}_{\rho}[\mathrm{kl}(\hat{L}(h, S)] \| L(h))]\\
+&\leq \mathbb{E}_{\rho}\left[\frac{\ln \frac{n+1}{\pi(h) \delta}}{n}\right]\\
+&= \mathbb{E}_{\rho}\left[\frac{\ln{\frac{1}{\pi(h)}} + \ln{\frac{n+1}{\delta}}}{n}\right] \\
+&= \frac{\mathbb{E}_{\rho}\left[\ln{\frac{1}{\pi(h)}}\right] + \ln{\frac{n+1}{\delta}}}{n} \\
+&= \frac{\sum_{h \in \mathcal{H}}\rho(h)\ln{\frac{1}{\pi(h)}} + \ln{\frac{n+1}{\delta}}}{n}
+\end{align*}
+The second inequality holds because of the results from the Home Assignment 1,
+which holds with probability greater than $1-\delta$ for all $h \in \mathcal{H}$
+simultaneously.
+The penultimate equality holds because neither $\ln{\frac{n+1}{\delta}}$ or $n$
+depend on $h$. In the last equality, the definition of expected value is used.\\
+Then with probability greater than $1-\delta$, for all distributions $\rho$
+over $\mathcal{H}$ simultaneously:
+\begin{align}
+  \label{T1}
+  \mathrm{kl}\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
+  \mathbb{E}_{\rho}[L(h)]\right) \leq
+  \frac{\sum_{h \in \mathcal{H}} \rho(h) \ln \frac{1}{\pi(h)}+\ln \frac{n+1}{\delta}}{n}
+\end{align}
+\QEDA
+\subsection{}
+\label{subsec:32}
+Let us recall the definition of the relative entropy of Kullback-Leibler
+divergence, where $p(x)$ and $q(x)$ are two probability distributions:
+\[
+\mathrm{KL}(p \| q)=
+\sum_{x \in \mathcal{X}} p(x) \ln \frac{p(x)}{q(x)}
+\]
+I can insert it the PAC-Bayes-kl inequality, that holds with probability greater
+than $1-\delta$, for all distributions $\rho$ over $\mathcal{H}$ simultaneously:
+\begin{align}
+  \label{T2}
+\mathrm{k} 1\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
+\mathbb{E}_{\rho}[L(h)]\right)
+\leq \frac{\mathrm{KL}(\rho \| \pi)+\ln \frac{n+1}{\delta}}{n}
+=\frac{\sum_{h \in \mathcal{H}} p(h) \ln \frac{p(h)}{q(h)}+\ln \frac{n+1}{\delta}}{n}
+\end{align}
+Therefore, the bound in \ref{T2} is at least as tight as the one in \ref{T1},
+because it they differ by the factor $0 \leq p(h) \leq 1$ in the log term inside
+the sum.
+\newpage
 
 \section{Nonnegativity of KL}
 \label{sec:4}
+\subsection{}
+\label{subsec:41}
+I need to prove that $\ln x \leq x-1$ for all $0<x<\infty$. I start by
+differentiating both functions:
+%% \begin{align*}
+%% &\frac{d}{dx}\ln x = \frac{1}{x} > 0 \text{ for } x > 0\\
+%% &\frac{d}{dx}x-1 = 1 > 0 \text{ for } x > 0
+%% \end{align*}
+%% Hence both functions are monotonically increasing and continuous in the given interval.
+%% There is a single intersection between the graphs of the function, since $\ln x
+%% = x-1$ has a single solution for $x=1$. Then, I only need to find the values of
+%% functions for a single point $0<x_1<1$ and for $x_2>1$.\\
+%% Let $x=0.5$, then:
+%% $$ \ln 0.5 \approx -0.69 \leq 0.5 $$
+%% Let $x=e$, then:
+%% $$ \ln e = 1 < e - 1 \approx 1.7 $$
+%% Therefore  $\ln x \leq x-1$ for all $0<x<\infty$. 
+\begin{align*}
+&\frac{d}{dx}\ln x = \frac{1}{x} \\
+&\frac{d}{dx}x-1 = 1 
+\end{align*}
+for $0 < x < 1:$
+\[
+\frac{1}{x} > 1
+\]
+for $x > 1:$
+\[
+\frac{1}{x} < 1 
+\]
+$\ln x = x-1$ has a single solution for $x=1$, hence for values $x>1$:
+$$\ln x < x - 1$$
+
+
+\subsection{}
+\label{subsec:42}
+According to Definition 2.11 from the lecture notes and since
+$\mathcal{X}$ is discrete:
+\[
+\mathrm{KL}(p \| q)=\mathbb{E}_{p}\left[\ln \frac{p(X)}{q(X)}\right]
+= \sum_{x \in \mathcal{X}} p(x) \ln \frac{p(x)}{q(x)}
+\]
+First, I look at the case where there is a point $x$ for which
+$q(x) = 0$ and $p(x) > 0$; and the case where $p(x) = 0$:
+In the lecture notes, a convention is used where
+$0 \ln \frac{0}{0}=0 \text { and } 0 \ln \frac{0}{q}=0 \text{ and } p \ln \frac{p}{0}=\infty$,
+hence our inequality holds. \\\\
+For the case where $p>0$ and  $q>0$, I follow the hint and will prove that
+$-\mathrm{KL}(p \| q) \leq 0$:
+\begin{align*}
+  -\sum_{x \in \mathcal{X}} p(x) \ln \frac{p(x)}{q(x)}
+  &=    -\sum_{x \in \mathcal{X}} p(x) \ln (p(x) - q(x)) \\
+  &= \sum_{x \in \mathcal{X}} p(x) \ln (q(x) - p(x)) \\
+  &= \sum_{x \in \mathcal{X}} p(x) \ln \frac{q(x)}{p(x)} \\
+  &\leq \sum_{x \in \mathcal{X}} p(x)\left(\frac{q(x)}{p(x)}-1\right)
+  \tag{by Subsection \ref{subsec:41}}\\
+  &= \sum_{x \in \mathcal{X}} \left(q(x) - p(x)\right) \\
+  &= \sum_{x \in \mathcal{X}} q(x) - \sum_{x \in \mathcal{X}} p(x)\\
+  &= \sum_{x \in \mathcal{X}} q(x) - 1 \\
+  &\leq 0
+\end{align*}
+The last inequality holds, because of the way we chose $q$.
+
+\subsection{}
+\label{subsec:43}
+In my proof, $\mathrm{KL}(p \| q)=0$ would hold iff $p(x) = q(x)$
+
+
 
 \end{document}
 
