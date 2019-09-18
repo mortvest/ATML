@@ -230,17 +230,28 @@ differentiating both functions:
 &\frac{d}{dx}\ln x = \frac{1}{x} \\
 &\frac{d}{dx}x-1 = 1 
 \end{align*}
-for $0 < x < 1:$
-\[
-\frac{1}{x} > 1
-\]
-for $x > 1:$
+$\ln x = x - 1$ has a solution for $x=1$, so our inequality holds for $x=1$.\\\\
+I then look at values $x>1$
 \[
 \frac{1}{x} < 1 
 \]
-$\ln x = x-1$ has a single solution for $x=1$, hence for values $x>1$:
-$$\ln x < x - 1$$
-
+Hence our inequality holds for $x>1$\\\\
+Then I look at values $0 < x < 1$, and we have that:
+\[
+\frac{1}{x} > 1
+\]
+furthermore:
+\begin{align*}
+\lim _{x \rightarrow 0^{+}} \ln{x} &= -\infty \\
+\lim _{x \rightarrow 0^{+}} x-1 &= 0
+\end{align*}
+and $x=1$ is a solution for $\ln x = x - 1$.
+Thus, it can be concluded that the inequality holds for all $0<x<1$.\\\\
+I have shown that the inequality holds for all three intervals, hence for all $0<x<\infty$:
+\[
+\ln x < x - 1
+\]
+\QEDA
 
 \subsection{}
 \label{subsec:42}
@@ -254,22 +265,26 @@ First, I look at the case where there is a point $x$ for which
 $q(x) = 0$ and $p(x) > 0$; and the case where $p(x) = 0$:
 In the lecture notes, a convention is used where
 $0 \ln \frac{0}{0}=0 \text { and } 0 \ln \frac{0}{q}=0 \text{ and } p \ln \frac{p}{0}=\infty$,
-hence our inequality holds. \\\\
-For the case where $p>0$ and  $q>0$, I follow the hint and will prove that
-$-\mathrm{KL}(p \| q) \leq 0$:
+hence our inequality holds.
+\newpage
+Let $\mathcal{X}_+$ be the set of $x$ s.t $p(x)>0$ and $q(x)>0$. I will then
+prove that $-\mathrm{KL}(p \| q) \leq 0$:
 \begin{align*}
-  -\sum_{x \in \mathcal{X}} p(x) \ln \frac{p(x)}{q(x)}
-  &=    -\sum_{x \in \mathcal{X}} p(x) \ln (p(x) - q(x)) \\
-  &= \sum_{x \in \mathcal{X}} p(x) \ln (q(x) - p(x)) \\
-  &= \sum_{x \in \mathcal{X}} p(x) \ln \frac{q(x)}{p(x)} \\
-  &\leq \sum_{x \in \mathcal{X}} p(x)\left(\frac{q(x)}{p(x)}-1\right)
+  -\sum_{x \in \mathcal{X}_{+}} p(x) \ln \frac{p(x)}{q(x)}
+  &=    -\sum_{x \in \mathcal{X}_+} p(x) \ln (p(x) - q(x)) \\
+  &= \sum_{x \in \mathcal{X}_+} p(x) \ln (q(x) - p(x)) \\
+  &= \sum_{x \in \mathcal{X}_+} p(x) \ln \frac{q(x)}{p(x)} \\
+  &\leq \sum_{x \in \mathcal{X}_+} p(x)\left(\frac{q(x)}{p(x)}-1\right)
   \tag{by Subsection \ref{subsec:41}}\\
-  &= \sum_{x \in \mathcal{X}} \left(q(x) - p(x)\right) \\
-  &= \sum_{x \in \mathcal{X}} q(x) - \sum_{x \in \mathcal{X}} p(x)\\
-  &= \sum_{x \in \mathcal{X}} q(x) - 1 \\
-  &\leq 0
+  &= \sum_{x \in \mathcal{X}_+} \left(q(x) - p(x)\right) \\
+  &= \sum_{x \in \mathcal{X}_+} q(x) - \sum_{x \in \mathcal{X}_+} p(x)\\
+  &= 0
 \end{align*}
-The last inequality holds, because of the way we chose $q$.
+Hence we have that for all values of $x$:
+\[
+\mathrm{KL}(p \| q) \geq 0
+\]
+\QEDA
 
 \subsection{}
 \label{subsec:43}
