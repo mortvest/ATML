@@ -46,9 +46,63 @@
 \maketitle
 \section{Policy Evaluation}
 \label{sec:1}
+I need to prove that:
+\[
+\forall s \in S : \lim _{k \rightarrow \infty} V_{k}(s)=V^{\pi}(s)
+\]
+This is equivalent to proving following:
+\[
+\forall s \in S : \lim _{k \rightarrow \infty} \Delta_{k} = 0
+\]
+I start by looking at the definition of $\Delta_k$ and replace the values of
+$V$ with the update expressions from the reinforcement learning slides. Then for
+all $s \in S$, we have:
+\begin{align*}
+  \Delta_{k} &= \max _{s}\left|V_{k}(s)-V^{\pi}(s)\right|\\
+  &= \max _{s}\left|
+  \sum_{a} \pi(s, a) \sum_{s^{\prime}} P_{s s^{\prime}}^{a}\left[R_{s s^{\prime}}^{a}+\gamma
+    V_{k-1}\left(s^{\prime}\right)\right] -
+  \sum_{a} \pi(s, a) \sum_{s^{\prime}} P_{s s^{\prime}}^{a}\left[R_{s s^{\prime}}^{a}+\gamma
+    V^{\pi}\left(s^{\prime}\right)\right] \right| \\
+  &= \max _{s}\left| \sum_{a} \pi(s, a)
+  \sum_{s^{\prime}} P_{s s^{\prime}}^{a}\left[R_{s s^{\prime}}^{a}+\gamma
+    V_{k-1}\left(s^{\prime}\right)\right] - P_{s s^{\prime}}^{a}\left[R_{s s^{\prime}}^{a}+\gamma
+    V^{\pi}\left(s^{\prime}\right)\right]\right| \\
+  &= \max _{s}\left| \sum_{a} \pi(s, a)\sum_{s^{\prime}} P_{s s^{\prime}}^{a} \gamma
+  \left[V_{k-1}\left(s^{\prime}\right) - V^{\pi}\left(s^{\prime}\right)\right]
+  \right| \\
+  &= \gamma \max _{s}\left| \sum_{a} \pi(s, a)\sum_{s^{\prime}} P_{s s^{\prime}}^{a}
+  \left[V_{k-1}\left(s^{\prime}\right) - V^{\pi}\left(s^{\prime}\right)\right]
+  \right| \\
+  & \leq \gamma  \max _{s}\left| \sum_{a} \pi(s, a)\sum_{s^{\prime}} P_{s s^{\prime}}^{a}
+  \cdot \max _{s~{\prime}} \left|
+  V_{k-1}\left(s^{\prime}\right) - V^{\pi}\left(s^{\prime}\right) \right|
+  \right| \\
+  & = \gamma \max _{s~{\prime}} \left|
+  V_{k-1}\left(s^{\prime}\right) - V^{\pi}\left(s^{\prime}\right) \right| \cdot
+  \max _{s}\left| \sum_{a} \pi(s, a)\sum_{s'} P_{s s^{\prime}}^{a}
+  \right| \\
+  &= \gamma \cdot \Delta_{k-1} \cdot
+  \max _{s}\left| \sum_{a} \pi(s, a)\sum_{s'} P_{s s^{\prime}}^{a}
+  \right| \\
+  &= \gamma \cdot \Delta_{k-1} 
+\end{align*}
+The penultimate equality holds because of the definition of $\Delta$, while
+the last equality holds because both $\pi(s,a)$ and
+$P_{s s^{\prime}}^{a}$ are probabilities that are summed for all values of
+$a$ and $s'$. \\
+After the transformation, I get the inequality:
+\[
+\forall s \in S : \Delta_k  \leq \gamma \cdot \Delta_{k-1}
+\]
+The values of both $\Delta_k$ and $\Delta_{k-1}$ are nonnegative, because
+of the absolute value in the definition. Furthermore $0 < \gamma < 1$, hence:
+\[
+\forall s \in S : \lim _{k \rightarrow \infty} \Delta_{k} = 0
+\]
+\QEDA
+
 \newpage
-
-
 \section{Maze Example}
 \label{sec:2}
 \subsection{}
@@ -100,7 +154,7 @@ another, while not leaving the world is 0, and I know the value of $V^{\pi}(G)$,
 \begin{align*}
   V^{\pi}(G_{left}) &= R_{G G_{left}}^{a}+\gamma V^{\pi}(G) \\
   V^{\pi}(G_{left}) &= 0+0.9 \cdot 10 \\
-  V^{\pi}(G_{left}) &= 9 \\
+  V^{\pi}(G_{left}) &= 9 
 \end{align*}
 Same logic can be applied to the calculation of $V^{\pi}(G)$, hence:
 \[
@@ -116,15 +170,12 @@ Same logic can be applied to the calculation of $V^{\pi}(G)$, hence:
 I start by rewriting an expression:
 \[
 \ln \frac{n+1}{\pi(h) \delta} 
-=\ln{\frac{1}{\pi(h)} \cdot \frac{(n+1)}{\delta}}
-=\ln{\frac{1}{\pi(h)}} + \ln{\frac{(n+1)}{\delta}}
+=\ln{\left(\frac{1}{\pi(h)} \cdot \frac{n+1}{\delta}\right)}
+=\ln{\frac{1}{\pi(h)}} + \ln{\frac{n+1}{\delta}}
 \]
-That would be useful later. \\
-I start by looking at the lhs of Theorem 1. KL is convex in $p$ and $q$, hence
-Jensen's inequality $(\expect{f(x)} \geq f \expect{x})$ can be used:
-%% \mathrm{k} 1\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
-%% \mathbb{E}_{\rho}[L(h)]\right) \leq
-%% \frac{\sum_{h \in \mathcal{H}} \rho(h) \ln \frac{1}{\pi(h)}+\ln \frac{n+1}{\delta}}{n}
+That would be useful later. \\\\
+I then use the LHS of Theorem 1 and apply Corollary 3.25. from the
+lecture notes and get:
 \begin{align*}
 \mathrm{kl}\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
 \mathbb{E}_{\rho}[L(h)]\right) &\leq
@@ -136,9 +187,8 @@ Jensen's inequality $(\expect{f(x)} \geq f \expect{x})$ can be used:
 \end{align*}
 The second inequality holds because of the results from the Home Assignment 1,
 which holds with probability greater than $1-\delta$ for all $h \in \mathcal{H}$
-simultaneously.
-The penultimate equality holds because neither $\ln{\frac{n+1}{\delta}}$ or $n$
-depend on $h$. In the last equality, the definition of expected value is used.\\
+simultaneously.The penultimate equality holds because neither $\ln{\frac{n+1}{\delta}}$ or $n$
+depend on $h$. In the last equality, the definition of expected value is used.\\\\
 Then with probability greater than $1-\delta$, for all distributions $\rho$
 over $\mathcal{H}$ simultaneously:
 \begin{align}
@@ -156,18 +206,18 @@ divergence, where $p(x)$ and $q(x)$ are two probability distributions:
 \mathrm{KL}(p \| q)=
 \sum_{x \in \mathcal{X}} p(x) \ln \frac{p(x)}{q(x)}
 \]
-I can insert it the PAC-Bayes-kl inequality, that holds with probability greater
+I can insert the definition in the PAC-Bayes-kl inequality, that holds with probability greater
 than $1-\delta$, for all distributions $\rho$ over $\mathcal{H}$ simultaneously:
 \begin{align}
   \label{T2}
-\mathrm{k} 1\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
+\mathrm{kl}\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
 \mathbb{E}_{\rho}[L(h)]\right)
 \leq \frac{\mathrm{KL}(\rho \| \pi)+\ln \frac{n+1}{\delta}}{n}
 =\frac{\sum_{h \in \mathcal{H}} p(h) \ln \frac{p(h)}{q(h)}+\ln \frac{n+1}{\delta}}{n}
 \end{align}
-Therefore, the bound in \ref{T2} is at least as tight as the one in \ref{T1},
-because it they differ by the factor $0 \leq p(h) \leq 1$ in the log term inside
-the sum.
+Therefore, the bound in (\ref{T2}) is at least as tight as the one in (\ref{T1}),
+because the bounds differ by the factor $0 \leq p(h) \leq 1$ in the log
+term inside the sum.
 \newpage
 
 \section{Nonnegativity of KL}
@@ -176,19 +226,6 @@ the sum.
 \label{subsec:41}
 I need to prove that $\ln x \leq x-1$ for all $0<x<\infty$. I start by
 differentiating both functions:
-%% \begin{align*}
-%% &\frac{d}{dx}\ln x = \frac{1}{x} > 0 \text{ for } x > 0\\
-%% &\frac{d}{dx}x-1 = 1 > 0 \text{ for } x > 0
-%% \end{align*}
-%% Hence both functions are monotonically increasing and continuous in the given interval.
-%% There is a single intersection between the graphs of the function, since $\ln x
-%% = x-1$ has a single solution for $x=1$. Then, I only need to find the values of
-%% functions for a single point $0<x_1<1$ and for $x_2>1$.\\
-%% Let $x=0.5$, then:
-%% $$ \ln 0.5 \approx -0.69 \leq 0.5 $$
-%% Let $x=e$, then:
-%% $$ \ln e = 1 < e - 1 \approx 1.7 $$
-%% Therefore  $\ln x \leq x-1$ for all $0<x<\infty$. 
 \begin{align*}
 &\frac{d}{dx}\ln x = \frac{1}{x} \\
 &\frac{d}{dx}x-1 = 1 
