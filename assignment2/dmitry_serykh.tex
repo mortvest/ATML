@@ -39,7 +39,7 @@
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
 
-\title{\vspace{-5cm} Assignment 2}
+\title{\vspace{-5cm}ATML Home Assignment 2}
 \author{Dmitry Serykh (qwl888)}
 
 \begin{document}
@@ -261,12 +261,12 @@ $\mathcal{X}$ is discrete:
 \mathrm{KL}(p \| q)=\mathbb{E}_{p}\left[\ln \frac{p(X)}{q(X)}\right]
 = \sum_{x \in \mathcal{X}} p(x) \ln \frac{p(x)}{q(x)}
 \]
-First, I look at the case where there is a point $x$ for which
-$q(x) = 0$ and $p(x) > 0$; and the case where $p(x) = 0$:
-In the lecture notes, a convention is used where
-$0 \ln \frac{0}{0}=0 \text { and } 0 \ln \frac{0}{q}=0 \text{ and } p \ln \frac{p}{0}=\infty$,
-hence our inequality holds.
-\newpage
+%% First, I look at the case where there is a point $x$ for which
+%% $q(x) = 0$ and $p(x) > 0$; and the case where $p(x) = 0$:
+%% In the lecture notes, a convention is used where
+%% $0 \ln \frac{0}{0}=0 \text { and } 0 \ln \frac{0}{q}=0 \text{ and } p \ln \frac{p}{0}=\infty$,
+%% hence our inequality holds.
+%% \newpage
 Let $\mathcal{X}_+$ be the set of $x$ s.t $p(x)>0$ and $q(x)>0$. I will then
 prove that $-\mathrm{KL}(p \| q) \leq 0$:
 \begin{align*}
@@ -278,9 +278,10 @@ prove that $-\mathrm{KL}(p \| q) \leq 0$:
   \tag{by Subsection \ref{subsec:41}}\\
   &= \sum_{x \in \mathcal{X}_+} \left(q(x) - p(x)\right) \\
   &= \sum_{x \in \mathcal{X}_+} q(x) - \sum_{x \in \mathcal{X}_+} p(x)\\
+  &= 1 - 1 \\
   &= 0
 \end{align*}
-Hence we have that for all values of $x$:
+Therefore:
 \[
 \mathrm{KL}(p \| q) \geq 0
 \]
@@ -288,8 +289,9 @@ Hence we have that for all values of $x$:
 
 \subsection{}
 \label{subsec:43}
-In my proof, $\mathrm{KL}(p \| q)=0$ would hold iff $p(x) = q(x)$
-
+The weak inequality $\ln x \leq x - 1$, that is used in my proof, only becomes
+equality for $x=1$. Hence $\mathrm{KL}(p \| q)=0$ would hold
+iff $p(x) = q(x)$ for all values of $x$ s.t $\frac{p(x)}{q(x)} = 1$.
 
 
 \end{document}
