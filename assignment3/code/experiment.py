@@ -73,6 +73,21 @@ def aggregate(votes, rho):
     signs[signs == 0] = 1
     return signs
 
+
+def collect_votes(m, train_x, train_y, test_x, test_y, param_grid):
+    losses = []
+    votes = []
+    for _ in range(m):
+        wsvm = WeakSVM()
+        loss = wsvm.train(train_x, train_y, param_grid)
+        losses.append(1.0 - loss)
+        vote, _ = wsvm.test(test_x, test_y)
+        votes.append(vote)
+    return np.array(losses), np.array(votes)
+
+def uniform_dist(m):
+    return np.repeat(1.0/m, m)
+
 def test():
     M = np.array([
         [1,-1,1,1,1,-1,-1],
@@ -83,6 +98,7 @@ def test():
     rho = np.repeat(1/4, 4)
     agg = aggregate(M, rho)
     print(agg)
+
 
 def results():
     np.random.seed(420)
@@ -121,7 +137,6 @@ def results():
     ]
 
     bl_svm = BaselineSVM()
-    # bl_svm = WeakSVM()
     bl_train_acc = bl_svm.train(test_x, test_y, grid_params)
     bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
     bl_time = bl_svm.time
@@ -130,7 +145,16 @@ def results():
     print("Baseline test accuracy:", bl_test_acc)
     print("Baseline time:", bl_time)
     print("Baseline preds:", bl_test_preds)
-
+    m = 100
+    losses, vote_matrix = collect_votes(m, train_x, train_y, test_x, test_y, grid_params)
+    print(losses)
+    rho = uniform_dist(m)
+    agg = aggregate(vote_matrix, rho)
+    print(vote_matrix.shape)
+    # for i in range(0, 150, 2):
+    #     print(vote_matrix[i])
+    # print(rho.shape)
+    print(agg)
 
 if __name__ == "__main__":
     debug = False
