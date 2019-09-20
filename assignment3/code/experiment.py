@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV, train_test_split
-
+from sklearn.metrics import accuracy_score
 
 class SVM():
     """ Abstract class. Implement an instance for each type of SVM """
@@ -92,12 +92,59 @@ def collect_weak_data(m, train_x, train_y, test_x, test_y, param_grid):
 def uniform_dist(m):
     return np.repeat(1.0/m, m)
 
-def test():
-    pass
+def find_rho(L_hat, n, r, m):
+    def alt_minimize():
+        nonlocal rho
+        nonlocal lmbda
+        lnr = -lmbda * (n - r)
+        rho = pi * np.exp(lnr * L_hat) / (np.sum(pi * np.exp(lnr * L_hat)))
+        exp_loss = np.sum(rho * L_hat)
+        delta = 0.05
+        klrp = np.sum(rho * np.log(rho/pi))
+        lmbda = 2 / (np.sqrt((2 * n * exp_loss)
+                             / (klrp + np.log((n + 1) / delta)) + 1) + 1)
+
+    start = time.perf_counter()
+    pi = uniform_dist(m)
+    rho = uniform_dist(m)
+    lmbda = 0.5
+    eps = 0.00001
+    diff = rho
+    old = 1
+    count = 0
+    while np.sum(np.abs(diff)) > eps:
+        count += 1
+        old = np.copy(rho)
+        old_l = lmbda
+        alt_minimize()
+        diff = old - rho
+        if debug:
+            print("delta rho:", np.sum(np.abs(diff)))
+            print("delta lambda:", np.abs(old_l - lmbda))
+
+
+    end = time.perf_counter()
+    time_rho = end - start
+    if debug: print("# of iterations:", count)
+    return rho, time_rho
+
+def weak_method(m, n, train_x, train_y, test_x, test_y, grid_params):
+    r = 35
+    test_y_m = np.copy(test_y)
+    test_y_m[test_y_m == 0] = -1
+
+    losses, vote_matrix, times = collect_weak_data(m, train_x, train_y, test_x, test_y, grid_params)
+    rho, time_rho = find_rho(losses, n, r, m)
+    agg_alg = aggregate(vote_matrix, rho)
+    acc = accuracy_score(test_y_m, agg_alg)
+    time_tot = np.sum(times) + time_rho
+    if debug:
+        print("score algorithm for {}: {}".format(m, acc))
+    return acc, time_tot
 
 
 def results():
-    np.random.seed(420)
+    # np.random.seed(420)
 
     data_folder = "./data/"
     data = np.loadtxt(data_folder + "ionosphere.data",
@@ -137,23 +184,19 @@ def results():
     bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
     bl_time = bl_svm.time
 
-    print("Baseline train accuracy:", bl_train_acc)
-    print("Baseline test accuracy:", bl_test_acc)
-    print("Baseline time:", bl_time)
-    print("Baseline preds:", bl_test_preds)
-    m = 200
-    losses, vote_matrix, times = collect_weak_data(m, train_x, train_y, test_x, test_y, grid_params)
-    print(losses)
-    rho = uniform_dist(m)
-    agg = aggregate(vote_matrix, rho)
-    print(vote_matrix.shape)
-    # for i in range(0, 150, 2):
-    #     print(vote_matrix[i])
-    # print(rho.shape)
-    # print(agg)
-    print(bl_time, np.sum(times))
+    accuracies = []
+    times = []
+    n_ticks = 20
+    ms = np.linspace(1,n, num=n_ticks, endpoint=True).astype(int)
+    for m in ms:
+        a, t = weak_method(m, n, train_x, train_y, test_x, test_y, grid_params)
+        accuracies.append(a)
+        times.append(t)
+
+    plt.plot(ms, (1 - np.array(accuracies)))
+    plt.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)))
+    plt.show()
 
 if __name__ == "__main__":
     debug = False
     results()
-    # test()
