@@ -31,10 +31,11 @@ class BaselineSVM(SVM):
         svc = SVC()
         clf = GridSearchCV(svc, grid_params, cv=5)
         clf.fit(train_x, train_y)
+        validation = clf.score(train_x, train_y)
         end = time.perf_counter()
         self.time = end - start
         self.clf = clf
-        return self.clf.score(train_x, train_y)
+        return validation
 
 class WeakSVM(SVM):
     """Weak SVM implementation"""
@@ -48,10 +49,11 @@ class WeakSVM(SVM):
         start = time.perf_counter()
         clf = SVC(gamma=gamma)
         clf.fit(new_train_x, new_train_y)
+        validation = clf.score(new_valid_x, new_valid_y)
         end = time.perf_counter()
         self.time = end - start
         self.clf = clf
-        return self.clf.score(new_valid_x, new_valid_y)
+        return validation
 
 
 def find_gamma(sigma):
@@ -74,30 +76,24 @@ def aggregate(votes, rho):
     return signs
 
 
-def collect_votes(m, train_x, train_y, test_x, test_y, param_grid):
+def collect_weak_data(m, train_x, train_y, test_x, test_y, param_grid):
     losses = []
     votes = []
+    times = []
     for _ in range(m):
         wsvm = WeakSVM()
         loss = wsvm.train(train_x, train_y, param_grid)
         losses.append(1.0 - loss)
         vote, _ = wsvm.test(test_x, test_y)
         votes.append(vote)
-    return np.array(losses), np.array(votes)
+        times.append(wsvm.time)
+    return np.array(losses), np.array(votes), np.array(times)
 
 def uniform_dist(m):
     return np.repeat(1.0/m, m)
 
 def test():
-    M = np.array([
-        [1,-1,1,1,1,-1,-1],
-        [-1,1,-1,1,1,-1,-1],
-        [1,-1,-1,-1,1,-1,-1],
-        [-1,-1,1,1,1,-1,-1]
-    ])
-    rho = np.repeat(1/4, 4)
-    agg = aggregate(M, rho)
-    print(agg)
+    pass
 
 
 def results():
@@ -145,8 +141,8 @@ def results():
     print("Baseline test accuracy:", bl_test_acc)
     print("Baseline time:", bl_time)
     print("Baseline preds:", bl_test_preds)
-    m = 100
-    losses, vote_matrix = collect_votes(m, train_x, train_y, test_x, test_y, grid_params)
+    m = 200
+    losses, vote_matrix, times = collect_weak_data(m, train_x, train_y, test_x, test_y, grid_params)
     print(losses)
     rho = uniform_dist(m)
     agg = aggregate(vote_matrix, rho)
@@ -154,7 +150,8 @@ def results():
     # for i in range(0, 150, 2):
     #     print(vote_matrix[i])
     # print(rho.shape)
-    print(agg)
+    # print(agg)
+    print(bl_time, np.sum(times))
 
 if __name__ == "__main__":
     debug = False
