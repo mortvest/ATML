@@ -184,6 +184,8 @@ def results():
     bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
     bl_time = bl_svm.time
 
+    print(bl_test_acc)
+
     accuracies = []
     times = []
     n_ticks = 20
@@ -193,8 +195,26 @@ def results():
         accuracies.append(a)
         times.append(t)
 
-    plt.plot(ms, (1 - np.array(accuracies)))
-    plt.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)))
+    # plt.plot(ms, (1 - np.array(accuracies)))
+    # plt.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)))
+    # plt.show()
+
+    fig, ax1 = plt.subplots()
+
+    ax1.set_xlabel('m')
+    ax1.set_ylabel('Test loss')
+    ax1.plot(ms, (1 - np.array(accuracies)), color="black")
+    ax1.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)), color="red")
+    ax1.tick_params(axis='y')
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    ax2.set_ylabel("Runtime(s)")  # we already handled the x-label with ax1
+    ax2.plot(ms, np.array(times), color="black", linestyle="--")
+    ax2.plot(ms, np.repeat(bl_time, n_ticks), color="red", linestyle="--")
+    ax2.tick_params(axis="y")
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.show()
 
 if __name__ == "__main__":
