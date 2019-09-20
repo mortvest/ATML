@@ -29,7 +29,7 @@ class BaselineSVM(SVM):
     def train(self, train_x, train_y, grid_params):
         start = time.perf_counter()
         svc = SVC()
-        clf = GridSearchCV(svc, grid_params, cv=5)
+        clf = GridSearchCV(svc, grid_params, cv=5, iid=False)
         clf.fit(train_x, train_y)
         validation = clf.score(train_x, train_y)
         end = time.perf_counter()
@@ -104,9 +104,12 @@ def find_rho(L_hat, n, r, m):
         lmbda = 2 / (np.sqrt((2 * n * exp_loss)
                              / (klrp + np.log((n + 1) / delta)) + 1) + 1)
 
+    # initiate timer
     start = time.perf_counter()
+    # initiate distributions
     pi = uniform_dist(m)
     rho = uniform_dist(m)
+    # initiate variables
     lmbda = 0.5
     eps = 0.00001
     diff = rho
@@ -121,7 +124,6 @@ def find_rho(L_hat, n, r, m):
         if debug:
             print("delta rho:", np.sum(np.abs(diff)))
             print("delta lambda:", np.abs(old_l - lmbda))
-
 
     end = time.perf_counter()
     time_rho = end - start
@@ -144,7 +146,7 @@ def weak_method(m, n, train_x, train_y, test_x, test_y, grid_params):
 
 
 def results():
-    # np.random.seed(420)
+    np.random.seed(420)
 
     data_folder = "./data/"
     data = np.loadtxt(data_folder + "ionosphere.data",
@@ -172,13 +174,10 @@ def results():
     gamma_jak = find_gamma(sigma_jak)
     # grid parameters
     grid_b = 10.0
-    Cs = np.array([grid_b**x for x in range(-3,4)])
-    if debug: print(Cs)
     grid_params = [
-        {'C': Cs,
-         'gamma': gamma_jak * exp_b_lst(grid_b, np.arange(-4,5))},
+        {'C': np.array([grid_b ** x for x in range(-3,4)]),
+         'gamma': np.array([gamma_jak * grid_b ** x for x in np.arange(-4,5)])}
     ]
-
     bl_svm = BaselineSVM()
     bl_train_acc = bl_svm.train(test_x, test_y, grid_params)
     bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
@@ -194,10 +193,6 @@ def results():
         a, t = weak_method(m, n, train_x, train_y, test_x, test_y, grid_params)
         accuracies.append(a)
         times.append(t)
-
-    # plt.plot(ms, (1 - np.array(accuracies)))
-    # plt.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)))
-    # plt.show()
 
     fig, ax1 = plt.subplots()
 
