@@ -20,7 +20,9 @@ class SVM():
         pass
 
     def test(self, test_x, test_y):
-        return self.clf.predict(test_x), self.clf.score(test_x, test_y)
+        preds = self.clf.predict(test_x)
+        preds[preds == 0] = -1
+        return preds, self.clf.score(test_x, test_y)
 
 class BaselineSVM(SVM):
     """Strong SVM implementation with CV"""
@@ -38,10 +40,13 @@ class WeakSVM(SVM):
     """Weak SVM implementation"""
     def train(self, train_x, train_y, grid_params):
         r = train_x.shape[1] + 1
+        # split training set into r and n-r
         new_train_x, new_valid_x, new_train_y, new_valid_y = train_test_split(
             train_x, train_y, train_size=r)
+        # choose random gamma
+        gamma = np.random.choice(grid_params[0]["gamma"])
         start = time.perf_counter()
-        clf = SVC()
+        clf = SVC(gamma=gamma)
         clf.fit(new_train_x, new_train_y)
         end = time.perf_counter()
         self.time = end - start
@@ -63,6 +68,21 @@ def find_jaakkola(zeros, ones):
     mins_o = find_mins(ones, zeros)
     return np.median(np.concatenate((mins_z, mins_o)))
 
+def aggregate(votes, rho):
+    signs = np.sign(votes.T @ rho).astype(int)
+    signs[signs == 0] = 1
+    return signs
+
+def test():
+    M = np.array([
+        [1,-1,1,1,1,-1,-1],
+        [-1,1,-1,1,1,-1,-1],
+        [1,-1,-1,-1,1,-1,-1],
+        [-1,-1,1,1,1,-1,-1]
+    ])
+    rho = np.repeat(1/4, 4)
+    agg = aggregate(M, rho)
+    print(agg)
 
 def results():
     np.random.seed(420)
@@ -79,15 +99,15 @@ def results():
         print(data_x[0])
         print(data_y[0])
 
-    train_x = data_x[:n]
-    train_y = data_y[:n]
-    # sanity check
-    test_x  = data_x[n:]
-    test_y  = data_y[n:]
+    train_x, test_x, train_y, test_y = train_test_split(
+        data_x, data_y, train_size=n)
+
     assert(train_x.shape[0] + test_x.shape[0] == data.shape[0]), "Split is incorrect"
+
     if debug: print(train_y, test_y)
     train_sub_0s = train_x[train_y == 0]
     train_sub_1s = train_x[train_y == 1]
+
     # applying Jaakkola's heuristic
     sigma_jak = find_jaakkola(train_sub_0s, train_sub_1s)
     gamma_jak = find_gamma(sigma_jak)
@@ -100,17 +120,19 @@ def results():
          'gamma': gamma_jak * exp_b_lst(grid_b, np.arange(-4,5))},
     ]
 
-    # bl_svm = BaselineSVM()
-    bl_svm = WeakSVM()
+    bl_svm = BaselineSVM()
+    # bl_svm = WeakSVM()
     bl_train_acc = bl_svm.train(test_x, test_y, grid_params)
-    _,bl_test_acc = bl_svm.test(test_x, test_y)
+    bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
     bl_time = bl_svm.time
 
     print("Baseline train accuracy:", bl_train_acc)
     print("Baseline test accuracy:", bl_test_acc)
     print("Baseline time:", bl_time)
+    print("Baseline preds:", bl_test_preds)
 
 
 if __name__ == "__main__":
-    debug = True
+    debug = False
     results()
+    # test()
