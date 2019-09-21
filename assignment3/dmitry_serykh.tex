@@ -44,10 +44,26 @@
 
 \begin{document}
 \maketitle
-\section{Intro}
-\label{sec:intro}
+\section{Description}
+\label{sec:desc}
+In this assignment, I have attempted to reproduce the second experiment from
+Thiemann et al for the Ionosphere dataset. I based a portion of my implementation
+(including the calculation Jaakkola's heuristic) on my own solution to a similar
+exercise from the ML course. I used \emph{python}, \emph{numpy} and SVM solver
+from the \emph{sklearn} package. \\\\
+I repeated the sin of not performing the experiment multiple times.\\\\
+The resulting plot of test losses, running time and bound can be seen
+on Figure \ref{plt1}. The source code for my implementation can be found in file
+\texttt{experiment.py} in \textbf{handin.zip}.
 
 
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{code/plt1}
+  \caption{Comparison of PAC-Bayesian aggregation with RBF kernel SVM
+    tuned by cross-validation for the Ionosphere dataset. $n=200$, $r=35$}
+  \label{plt1}
+\end{figure}
 
 \end{document}
 

@@ -10,6 +10,7 @@ from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.metrics import accuracy_score
 
+
 class SVM():
     """ Abstract class. Implement an instance for each type of SVM """
     def __init__(self):
@@ -24,6 +25,7 @@ class SVM():
         preds[preds == 0] = -1
         return preds, self.clf.score(test_x, test_y)
 
+
 class BaselineSVM(SVM):
     """Strong SVM implementation with CV"""
     def train(self, train_x, train_y, grid_params):
@@ -36,6 +38,7 @@ class BaselineSVM(SVM):
         self.time = end - start
         self.clf = clf
         return validation
+
 
 class WeakSVM(SVM):
     """Weak SVM implementation"""
@@ -56,12 +59,6 @@ class WeakSVM(SVM):
         return validation
 
 
-def find_gamma(sigma):
-    return 1.0/(2.0 * sigma**2.0)
-
-def exp_b_lst(b, lst):
-    return b ** lst
-
 def find_jaakkola(zeros, ones):
     def find_mins(fst, snd):
         dists = cdist(fst, snd)
@@ -69,6 +66,7 @@ def find_jaakkola(zeros, ones):
     mins_z = find_mins(zeros, ones)
     mins_o = find_mins(ones, zeros)
     return np.median(np.concatenate((mins_z, mins_o)))
+
 
 def aggregate(votes, rho):
     signs = np.sign(votes.T @ rho).astype(int)
@@ -89,8 +87,37 @@ def collect_weak_data(m, train_x, train_y, test_x, test_y, param_grid):
         times.append(wsvm.time)
     return np.array(losses), np.array(votes), np.array(times)
 
+
 def uniform_dist(m):
     return np.repeat(1.0/m, m)
+
+def KL_div(p,q):
+    return np.sum(p * np.log(p/q))
+
+def kl_up_inv(x, z, eps=0.00000001):
+    """
+    Based on implementation by Yevgeny Seldin
+    function y = kl_inv_pos(x, z)
+    y = argmax_y Dkl(x||y) < z
+    """
+    if ((x < 0) or (x > 1) or (z < 0)):
+        raise ValueError('wrong argument')
+    if (z == 0):
+        y = x
+    else:
+        y = (1 + x) / 2
+        step = (1 - x) / 4
+        if (x > 0):
+            p0 = x
+        else:
+            p0 = 1
+        while (step > eps):
+            if (x * np.log(p0 / y) + (1 - x) * np.log((1 - x) / (1 - y))) < z:
+                y += step
+            else:
+                y -= step
+            step /= 2
+    return y
 
 def find_rho(L_hat, n, r, m):
     def alt_minimize():
@@ -100,9 +127,11 @@ def find_rho(L_hat, n, r, m):
         rho = pi * np.exp(lnr * L_hat) / (np.sum(pi * np.exp(lnr * L_hat)))
         exp_loss = np.sum(rho * L_hat)
         delta = 0.05
-        klrp = np.sum(rho * np.log(rho/pi))
-        lmbda = 2 / (np.sqrt((2 * n * exp_loss)
-                             / (klrp + np.log((n + 1) / delta)) + 1) + 1)
+        klrp = KL_div(rho, pi)
+        lmbda = 2 / (np.sqrt(
+            (2 * n * exp_loss)
+            # / (klrp + np.log((2*np.sqrt(n) / delta)) + 1)) + 1)
+            / (klrp + np.log((n + 1) / delta)) + 1) + 1)
 
     # initiate timer
     start = time.perf_counter()
@@ -110,7 +139,7 @@ def find_rho(L_hat, n, r, m):
     pi = uniform_dist(m)
     rho = uniform_dist(m)
     # initiate variables
-    lmbda = 0.5
+    lmbda = 1
     eps = 0.00001
     diff = rho
     old = 1
@@ -130,8 +159,8 @@ def find_rho(L_hat, n, r, m):
     if debug: print("# of iterations:", count)
     return rho, time_rho
 
-def weak_method(m, n, train_x, train_y, test_x, test_y, grid_params):
-    r = 35
+
+def majority_vote(m, n, train_x, train_y, test_x, test_y, grid_params, r=35):
     test_y_m = np.copy(test_y)
     test_y_m[test_y_m == 0] = -1
 
@@ -142,75 +171,87 @@ def weak_method(m, n, train_x, train_y, test_x, test_y, grid_params):
     time_tot = np.sum(times) + time_rho
     if debug:
         print("score algorithm for {}: {}".format(m, acc))
-    return acc, time_tot
+    return acc, time_tot, rho
 
 
-def results():
-    np.random.seed(420)
+def pac_bayes_kl(L_hat, rho, n, m, delta=0.05, r=35):
+    pi = uniform_dist(m)
+    z = (KL_div(rho, pi) + np.log((2 * np.sqrt(n-r)) / delta))/(n-r)
+    return kl_up_inv(L_hat, z)
 
-    data_folder = "./data/"
-    data = np.loadtxt(data_folder + "ionosphere.data",
-                      delimiter = ",")
-    if debug: print(np.shape(data))
-    np.random.shuffle(data)
-    n = 200
-    data_x = data[:,:-1]
-    data_y = data[:,-1].astype(int)
-    if debug:
-        print(data_x[0])
-        print(data_y[0])
-
-    train_x, test_x, train_y, test_y = train_test_split(
-        data_x, data_y, train_size=n)
-
-    assert(train_x.shape[0] + test_x.shape[0] == data.shape[0]), "Split is incorrect"
-
-    if debug: print(train_y, test_y)
+def calc_jaakkola(train_x, train_y):
     train_sub_0s = train_x[train_y == 0]
     train_sub_1s = train_x[train_y == 1]
 
     # applying Jaakkola's heuristic
     sigma_jak = find_jaakkola(train_sub_0s, train_sub_1s)
-    gamma_jak = find_gamma(sigma_jak)
+    gamma_jak = 1.0 / (2.0 * sigma_jak**2.0)
     # grid parameters
     grid_b = 10.0
     grid_params = [
         {'C': np.array([grid_b ** x for x in range(-3,4)]),
          'gamma': np.array([gamma_jak * grid_b ** x for x in np.arange(-4,5)])}
     ]
+    return grid_params
+
+
+def results():
+    np.random.seed(421)
+
+    data_folder = "./data/"
+    data = np.loadtxt(data_folder + "ionosphere.data", delimiter=",")
+    if debug: print(np.shape(data))
+    np.random.shuffle(data)
+    n = 200
+    data_x = data[:,:-1]
+    data_y = data[:,-1].astype(int)
+
+    train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, train_size=n)
+    assert(train_x.shape[0] + test_x.shape[0] == data.shape[0]), "Split is incorrect"
+
+    grid_params = calc_jaakkola(train_x, train_y)
+    if debug: print(train_y, test_y)
     bl_svm = BaselineSVM()
     bl_train_acc = bl_svm.train(test_x, test_y, grid_params)
     bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
     bl_time = bl_svm.time
 
-    print(bl_test_acc)
-
     accuracies = []
     times = []
+    rhos = []
     n_ticks = 20
-    ms = np.linspace(1,n, num=n_ticks, endpoint=True).astype(int)
+    ms = np.linspace(1, n, num=n_ticks, endpoint=True).astype(int)
     for m in ms:
-        a, t = weak_method(m, n, train_x, train_y, test_x, test_y, grid_params)
+        a, t, rho = majority_vote(m, n, train_x, train_y, test_x, test_y, grid_params)
         accuracies.append(a)
         times.append(t)
+        rhos.append(rho)
 
+
+    losses = 1 - np.array(accuracies)
+    bound = [pac_bayes_kl(L_hat, rho, n, m) for L_hat, rho, m in zip(losses, rhos, ms)]
+
+    # plotting
     fig, ax1 = plt.subplots()
 
     ax1.set_xlabel('m')
     ax1.set_ylabel('Test loss')
-    ax1.plot(ms, (1 - np.array(accuracies)), color="black")
-    ax1.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)), color="red")
+    ax1.plot(ms, losses, color="black", label="Our method")
+    ax1.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)), color="red", label="CV SVM")
+    ax1.plot(ms, bound, color="blue", label="Bound" )
     ax1.tick_params(axis='y')
 
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
     ax2.set_ylabel("Runtime(s)")  # we already handled the x-label with ax1
-    ax2.plot(ms, np.array(times), color="black", linestyle="--")
-    ax2.plot(ms, np.repeat(bl_time, n_ticks), color="red", linestyle="--")
+    ax2.plot(ms, np.array(times), color="black", linestyle="--", label=r"$t_m$")
+    ax2.plot(ms, np.repeat(bl_time, n_ticks), color="red", linestyle="--", label=r"$t_{CV}$")
     ax2.tick_params(axis="y")
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.show()
+    fig.legend(loc="upper right", bbox_to_anchor=(0.9, 0.92))
+    # plt.show()
+    plt.savefig("plt1.png")
 
 if __name__ == "__main__":
     debug = False
