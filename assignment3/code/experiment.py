@@ -179,7 +179,7 @@ def pac_bayes_kl(L_hat, rho, n, m, delta=0.05, r=35):
     z = (KL_div(rho, pi) + np.log((2 * np.sqrt(n-r)) / delta))/(n-r)
     return kl_up_inv(L_hat, z)
 
-def calc_jaakkola(train_x, train_y):
+def jaakkola_grid(train_x, train_y):
     train_sub_0s = train_x[train_y == 0]
     train_sub_1s = train_x[train_y == 1]
 
@@ -195,8 +195,23 @@ def calc_jaakkola(train_x, train_y):
     return grid_params
 
 
+def run_once(n, ms, n_ticks, train_x, train_y, test_x, test_y, grid_params):
+    accuracies = []
+    times = []
+    rhos = []
+    for m in ms:
+        a, t, rho = majority_vote(m, n, train_x, train_y, test_x, test_y, grid_params)
+        accuracies.append(a)
+        times.append(t)
+        rhos.append(rho)
+
+    losses = 1 - np.array(accuracies)
+    bound = [pac_bayes_kl(L_hat, rho, n, m) for L_hat, rho, m in zip(losses, rhos, ms)]
+    return losses, np.array(times), np.array(bound)
+
+
 def results():
-    np.random.seed(421)
+    # np.random.seed(420)
 
     data_folder = "./data/"
     data = np.loadtxt(data_folder + "ionosphere.data", delimiter=",")
@@ -209,27 +224,42 @@ def results():
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, train_size=n)
     assert(train_x.shape[0] + test_x.shape[0] == data.shape[0]), "Split is incorrect"
 
-    grid_params = calc_jaakkola(train_x, train_y)
+    grid_params = jaakkola_grid(train_x, train_y)
+
     if debug: print(train_y, test_y)
     bl_svm = BaselineSVM()
     bl_train_acc = bl_svm.train(test_x, test_y, grid_params)
     bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
     bl_time = bl_svm.time
 
-    accuracies = []
-    times = []
-    rhos = []
+    # accuracies = []
+    # times = []
+    # rhos = []
+    # n_ticks = 20
+    # ms = np.logspace(0.1, np.log10(n), num=n_ticks, endpoint=True).astype(int)
+    # for m in ms:
+    #     a, t, rho = majority_vote(m, n, train_x, train_y, test_x, test_y, grid_params)
+    #     accuracies.append(a)
+    #     times.append(t)
+    #     rhos.append(rho)
+
+    # accuracies, times, rhos = run_once(n, train_x, train_y, test_x, test_y, grid_params)
+    # losses = 1 - np.array(accuracies)
+    # bound = [pac_bayes_kl(L_hat, rho, n, m) for L_hat, rho, m in zip(losses, rhos, ms)]
     n_ticks = 20
-    ms = np.linspace(1, n, num=n_ticks, endpoint=True).astype(int)
-    for m in ms:
-        a, t, rho = majority_vote(m, n, train_x, train_y, test_x, test_y, grid_params)
-        accuracies.append(a)
-        times.append(t)
-        rhos.append(rho)
+    n_tries = 75
+    ms = np.logspace(0.1, np.log10(n), num=n_ticks, endpoint=True).astype(int)
 
+    losses_s, times_s, bound_s = run_once(n, ms, n_ticks, train_x, train_y, test_x, test_y, grid_params)
+    for _ in range(n_tries-1):
+        one, two, three = run_once(n, ms, n_ticks, train_x, train_y, test_x, test_y, grid_params)
+        losses_s += one
+        times_s += two
+        bound_s += three
 
-    losses = 1 - np.array(accuracies)
-    bound = [pac_bayes_kl(L_hat, rho, n, m) for L_hat, rho, m in zip(losses, rhos, ms)]
+    losses = losses_s / n_tries
+    times = times_s / n_tries
+    bound = bound_s /n_tries
 
     # plotting
     fig, ax1 = plt.subplots()
@@ -239,14 +269,14 @@ def results():
     ax1.plot(ms, losses, color="black", label="Our method")
     ax1.plot(ms, (1 - np.repeat(bl_test_acc, n_ticks)), color="red", label="CV SVM")
     ax1.plot(ms, bound, color="blue", label="Bound" )
-    ax1.tick_params(axis='y')
+    ax1.set_xscale('log')
 
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
     ax2.set_ylabel("Runtime(s)")  # we already handled the x-label with ax1
     ax2.plot(ms, np.array(times), color="black", linestyle="--", label=r"$t_m$")
     ax2.plot(ms, np.repeat(bl_time, n_ticks), color="red", linestyle="--", label=r"$t_{CV}$")
-    ax2.tick_params(axis="y")
+    ax2.set_xscale('log')
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     fig.legend(loc="upper right", bbox_to_anchor=(0.9, 0.92))
