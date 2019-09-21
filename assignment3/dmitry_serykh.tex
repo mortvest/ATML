@@ -45,11 +45,12 @@
 \begin{document}
 \maketitle
 \section{Description}
-\subsection{Practical Information}
 In this assignment, I have attempted to reproduce the second experiment from
 Thiemann et al for the Ionosphere dataset. I based a portion of my implementation
 (including the calculation Jaakkola's heuristic) on my own solution to a similar
-exercise from the ML course. I used \emph{python}, \emph{numpy} and SVM solver
+exercise from the ML course. 
+\subsection{Practical Information}
+I used \emph{python}, \emph{numpy} and SVM solver
 from the \emph{sklearn} package. The experiment were ran on my laptop, running
 Linux and with following hardware specifications:
 \begin{verbatim}
@@ -59,12 +60,14 @@ Linux and with following hardware specifications:
 
 \subsection{Theory}
 I used the slightly tighter version of PAC-Bayes-kl inequality, as described in
-the assignment. Furthermore, I used a following numerically stable update rule for $\rho$,
-as suggested in the assignment text.
+the assignment and in paper. Furthermore, I used a following numerically stable
+update rule for $\rho$, as suggested in the assignment text.
 \[
 \rho(h) = 
 \frac{\left.\pi(h) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}(h, S)}-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right.}\right)}{\sum_{h^{\prime}} \pi\left(h^{\prime}\right) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}}\left(h^{\prime}, S\right)-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right)}}
 \]
+
+\subsection{Implementation}
 
 \subsection{Results}
 I decided to not repeat the ``sin'', committed in the original paper and
