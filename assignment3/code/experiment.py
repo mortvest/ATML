@@ -41,7 +41,7 @@ class BaselineSVM(SVM):
 
 
 class WeakSVM(SVM):
-    """Weak SVM implementation"""
+    """Weak SVM implementation with gamma, chosen randomly from the grid"""
     def train(self, train_x, train_y, grid_params):
         r = train_x.shape[1] + 1
         # split training set into r and n-r
@@ -97,7 +97,7 @@ def collect_weak_data(m, train_x, train_y, test_x, test_y, param_grid):
 
 def uniform_dist(m):
     """
-    uniform distribution with for m values
+    Uniform distribution with for m values
     """
     return np.repeat(1.0/m, m)
 
@@ -150,7 +150,6 @@ def find_rho(L_hat, n, r, m, delta):
         exp_loss = np.sum(rho * L_hat)
         klrp = KL_div(rho, pi)
         lmbda = 2 / (np.sqrt(
-            # (2 * n * exp_loss) / (klrp + np.log((2*np.sqrt(n) / delta)) + 1)) + 1)
             (2 * (n - r) * exp_loss) / (klrp + np.log((2 * np.sqrt(n - r) / delta)) + 1)) + 1)
 
     # initiate timer
@@ -165,7 +164,6 @@ def find_rho(L_hat, n, r, m, delta):
     count = 0
     # threshold
     eps = 0.00001
-
     while np.sum(np.abs(diff)) > eps:
         count += 1
         old = np.copy(rho)
@@ -269,7 +267,6 @@ def main():
     ms = np.logspace(0.1, np.log10(n), num=n_ticks, endpoint=True).astype(int)
 
     # collecting results
-    print("Collecting results")
     losses_s = []
     times_s = []
     bound_s = []
