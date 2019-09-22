@@ -61,20 +61,33 @@ Linux and with following hardware specifications:
 
 \subsection{Theory}
 I used the slightly tighter version of PAC-Bayes-kl inequality, as described in
-the assignment and in the paper. Furthermore, I used a following numerically stable
+the paper:
+\[
+\mathrm{kl}\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
+\mathbb{E}_{\rho}[L(h)]\right) \leq \frac{\mathrm{KL}(\rho \| \pi)+\ln \frac{2
+    \sqrt{n-r}}{\delta}}{n-r}
+\]
+which holds with probability $1 - \delta$ for all distributions $\rho \in
+\mathcal{H}$. I used the numerical inversion of the kl divergence from the first
+assignment in order to bound the test loss of the PAC Bayes aggregation model.\\\\
+I used a following numerically stable
 update rule for $\rho$, as suggested in the assignment text.
 \[
 \rho(h) = 
 \frac{\left.\pi(h) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}(h, S)}-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right.}\right)}{\sum_{h^{\prime}} \pi\left(h^{\prime}\right) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}}\left(h^{\prime}, S\right)-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right)}}
 \]
-I also used weighted majority vote aggregation (the discrete case), as described
-in the lecture notes, by calculating.
+For the $\lambda$ update, I used the formula from the paper:
 \[
-\mathrm{MV}_{\rho}(X)=\operatorname{sign}\left(\sum_{h \in \mathcal{H}} \rho(h) h(X)\right)
+\lambda=\frac{2}{\sqrt{\frac{2(n-r) \mathbb{E}_{\rho}[\hat{L}(h, S)]}{\left(\mathrm{KL}(\rho \| \pi)+\ln \frac{2 \sqrt{(n-r)}}{\delta}\right)}+1+1}}
 \]
-where $\operatorname{sign}(0)=1$
-
-\subsection{Implementation}
+I used uniform distribution for the value of $\pi(h)$ and the initial value of
+$\rho(h)$. I chose 1 to be the initial value of $\lambda$ and set $\delta =
+0.05$, as in the paper. I also used weighted majority vote aggregation (the
+discrete case), as described in the lecture notes, by calculating.
+\[
+\operatorname{sign}\left(\sum_{h \in \mathcal{H}} \rho(h) h(X)\right)
+\]
+where I chose $\operatorname{sign}(0)=1$\\\\
 
 \subsection{Results}
 I decided not to repeat the ``sin'' that was committed in the original paper and
@@ -95,24 +108,28 @@ implementation can be found in file \texttt{experiment.py} in
 \textbf{handin.zip}.
 
 \section{Conclusion}
-I reproduced the experiment from the paper and managed to achieve a similar
-looking result. The test loss of the PAC-Bayes aggregation decreases with
-increasing $m$, and it nears the test loss of the baseline model when the value
-of $m$ approaches $n$. \\
-Furthermore, the runtime for the PAC-Bayes aggregation method
-is much better than the baseline model. The runtime grows
-linearly with the value of $m$ (which looks exponential on the plot due to
-logarithmic scale of x-axis), which is akin to the results in the paper. \\
-Lastly, as one would expect, there are discrepancies between my plot and the
-original due to nondeterministic nature of the algorithm.
+I carried out the second experiment from the paper and the results are as
+follows.\\
+The test loss of the PAC-Bayes aggregation decreases with increasing
+$m$, and it nears the test loss of the baseline model when the value of $m$
+approaches $n$. \\ Furthermore, the runtime for the PAC-Bayes aggregation method
+is much better than the baseline model. The runtime grows linearly with the
+value of $m$ (which looks exponential on the plot due to logarithmic scale of
+x-axis), which is akin to the results in the paper. \\ Lastly, as one would
+expect, there are discrepancies between my plot and the original due to
+nondeterministic nature of the algorithm, but I would argue that I managed to
+achieve similar results.
 
-\begin{figure}
+\newpage
+\vspace*{\fill}
+\begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{code/plt_avg25}
+  \includegraphics[width=\textwidth]{code/plt_avg25_1}
   \caption{Comparison of PAC-Bayesian aggregation with RBF kernel SVM
     tuned by cross-validation for the Ionosphere dataset. Averaged over 25 experiments, $n=200$, $r=35$}
   \label{plt1}
 \end{figure}
+\vspace*{\fill}
 
 \end{document}
 

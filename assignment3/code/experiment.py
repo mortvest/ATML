@@ -111,7 +111,7 @@ def KL_div(p,q):
 
 def kl_up_inv(x, z, eps=0.00000001):
     """
-    Inversion of kl. Based on implementation by Yevgeny Seldin
+    Inversion of kl using binary search. Based on implementation by Yevgeny Seldin
     function y = kl_inv_pos(x, z)
     y = argmax_y Dkl(x||y) < z
     """
@@ -150,19 +150,22 @@ def find_rho(L_hat, n, r, m, delta):
         exp_loss = np.sum(rho * L_hat)
         klrp = KL_div(rho, pi)
         lmbda = 2 / (np.sqrt(
-            (2 * n * exp_loss) / (klrp + np.log((2*np.sqrt(n) / delta)) + 1)) + 1)
+            # (2 * n * exp_loss) / (klrp + np.log((2*np.sqrt(n) / delta)) + 1)) + 1)
+            (2 * (n - r) * exp_loss) / (klrp + np.log((2 * np.sqrt(n - r) / delta)) + 1)) + 1)
 
     # initiate timer
     start = time.perf_counter()
-    # initiate distributions
+    # initiate rho and pi with uniform distributions
     pi = uniform_dist(m)
     rho = uniform_dist(m)
     # initiate variables
     lmbda = 1
-    eps = 0.00001
     diff = rho
     old = 1
     count = 0
+    # threshold
+    eps = 0.00001
+
     while np.sum(np.abs(diff)) > eps:
         count += 1
         old = np.copy(rho)
@@ -252,6 +255,7 @@ def run_once(n, ms, n_ticks, data, r, delta):
 def main():
     # np.random.seed(420)
     # load data
+    print("Loading data")
     data_folder = "./data/"
     data = np.loadtxt(data_folder + "ionosphere.data", delimiter=",")
 
@@ -261,23 +265,29 @@ def main():
     n = 200
     r = data.shape[1]
     delta = 0.05
-    ms = np.logspace(0.4, np.log10(n), num=n_ticks, endpoint=True).astype(int)
+    # ms = np.logspace(0.4, np.log10(n), num=n_ticks, endpoint=True).astype(int)
+    ms = np.logspace(0.1, np.log10(n), num=n_ticks, endpoint=True).astype(int)
 
     # collecting results
+    print("Collecting results")
     losses_s = []
     times_s = []
     bound_s = []
     bl_test_s = []
     bl_time_s = []
+    count = 1
     for _ in range(n_tries):
+        print("Running experiment #{}".format(count))
         one, two, three, four, five = run_once(n, ms, n_ticks, data, r, delta)
         losses_s.append(one)
         times_s.append(two)
         bound_s.append(three)
         bl_test_s.append(four)
         bl_time_s.append(five)
+        count += 1
 
     # calculating metrics
+    print("Tests ran. Calculating metrics and plotting")
     losses = np.mean(losses_s, axis=0)
     times = np.mean(times_s, axis=0)
     bound = np.mean(bound_s, axis=0)
@@ -302,7 +312,7 @@ def main():
     ax1.set_ylabel('Test loss')
     ax1.plot(ms, losses, color="black", label="Our method")
     ax1.plot(ms, np.repeat(bl_test_acc, n_ticks), color="red", label="CV SVM")
-    ax1.plot(ms, bound, color="blue", label="Bound" )
+    ax1.plot(ms, bound, color="blue", label="Bound")
     ax1.set_xscale('log')
 
     ax2 = ax1.twinx()
@@ -316,41 +326,6 @@ def main():
     fig.legend(loc="upper right", bbox_to_anchor=(0.9, 0.92))
     plt.savefig("plt1.png")
 
-def test():
-    # load data
-    data_folder = "./data/"
-    data = np.loadtxt(data_folder + "ionosphere.data", delimiter=",")
-
-    # define constants
-    n_ticks = 20
-    n_tries = 25
-    n = 200
-    r = data.shape[1]
-    delta = 0.05
-    ms = np.logspace(0.4, np.log10(n), num=n_ticks, endpoint=True).astype(int)
-
-    # shuffle dataset
-    np.random.shuffle(data)
-
-    # split data
-    data_x = data[:,:-1]
-    data_y = data[:,-1].astype(int)
-    train_x, test_x, train_y, test_y = train_test_split(data_x, data_y, train_size=n)
-    assert(train_x.shape[0] + test_x.shape[0] == data.shape[0]), "Split is incorrect"
-
-    # calculate parameter grid
-    grid_params = jaakkola_grid(train_x, train_y)
-
-    # baseline CV SVM
-    bl_svm = BaselineSVM()
-    bl_train_acc = bl_svm.train(train_x, train_y, grid_params)
-    bl_test_preds, bl_test_acc = bl_svm.test(test_x, test_y)
-    bl_time = bl_svm.time
-
-    print("Train_acc:", bl_train_acc)
-    print("Test acc:", bl_test_acc)
-
 if __name__ == "__main__":
     debug = False
     main()
-    # test()
