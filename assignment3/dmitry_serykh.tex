@@ -44,13 +44,16 @@
 
 \begin{document}
 \maketitle
-\section{Description}
+\section{Introduction}
 In this assignment, I have attempted to reproduce the second experiment from
 Thiemann et al for the Ionosphere dataset. I based a portion of my implementation
 (including the calculation Jaakkola's heuristic) on my own solution to a similar
-exercise from the ML course that I took last year.
+exercise from the DIKU ML course that I took last year. The source code for my
+implementation can be found in file \texttt{experiment.py} in
+\textbf{handin.zip}.
 
-\subsection{Practical Information}
+
+\section{Practical Information}
 I used \emph{python}, \emph{numpy} and SVM solver
 from the \emph{sklearn} package. The experiment were ran on my laptop, running
 Linux and with following hardware specifications:
@@ -59,7 +62,7 @@ Linux and with following hardware specifications:
  RAM: 7682MiB
 \end{verbatim}
 
-\subsection{Theory}
+\section{Theory}
 I used the slightly tighter version of PAC-Bayes-kl inequality, as described in
 the paper:
 \[
@@ -69,7 +72,7 @@ the paper:
 \]
 which holds with probability $1 - \delta$ for all distributions $\rho \in
 \mathcal{H}$. I used the numerical inversion of the kl divergence from the first
-assignment in order to bound the test loss of the PAC Bayes aggregation model.\\\\
+assignment in order to bound the test loss of the PAC-Bayesian aggregation model.\\\\
 I used a following numerically stable
 update rule for $\rho$, as suggested in the assignment text.
 \[
@@ -89,36 +92,33 @@ discrete case), as described in the lecture notes, by calculating.
 \]
 where I chose $\operatorname{sign}(0)=1$\\\\
 
-\subsection{Results}
+\section{Results}
 I decided not to repeat the ``sin'' that was committed in the original paper and
 repeated the whole experiment 25 times and find the average of the gathered
-results. Moreover, I calculated the standard deviation of the losses and
+results. Moreover, I calculated the standard deviation of the test losses and
 runtimes for both methods:
 
 \begin{verbatim}
 Standard deviations:
-PAC Bayes loss: 0.0982
+PAC-Bayesian loss: 0.0982
 CV loss: 0.0147
-PAC Bayes time: 0.0575
+PAC-Bayesian time: 0.0575
 CV time: 0.0441
 \end{verbatim}
-The resulting plot of average test losses,
-running time and bound can be seen on Figure \ref{plt1}. The source code for my
-implementation can be found in file \texttt{experiment.py} in
-\textbf{handin.zip}.
-
-\section{Conclusion}
-I carried out the second experiment from the paper and the results are as
-follows.\\
-The test loss of the PAC-Bayes aggregation decreases with increasing
+The resulting plot of average test losses (PAC-Bayesian aggregation and RBF
+kernel SVM tuned by cross-validation) running times ($t_{CV}$ and $t_m$) and
+bound can be seen on Figure \ref{plt1}. \\\\
+The test loss of the PAC-Bayesian aggregation decreases with increasing
 $m$, and it nears the test loss of the baseline model when the value of $m$
-approaches $n$. \\ Furthermore, the runtime for the PAC-Bayes aggregation method
+approaches $n$. \\
+Furthermore, the runtime for the PAC-Bayesian aggregation method
 is much better than the baseline model. The runtime grows linearly with the
 value of $m$ (which looks exponential on the plot due to logarithmic scale of
-x-axis), which is akin to the results in the paper. \\ Lastly, as one would
-expect, there are discrepancies between my plot and the original due to
-nondeterministic nature of the algorithm, but I would argue that I managed to
-achieve similar results.
+x-axis), which is akin to the results in the paper. \\
+Lastly, as one would expect, there are discrepancies between my plot and the
+original due to nondeterministic nature of the algorithm. I would, however, argue
+that I managed to achieve results, similar to the original experiment, and
+the main data trends of the original are captured on my plot.
 
 \newpage
 \vspace*{\fill}
