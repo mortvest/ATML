@@ -48,7 +48,8 @@
 In this assignment, I have attempted to reproduce the second experiment from
 Thiemann et al for the Ionosphere dataset. I based a portion of my implementation
 (including the calculation Jaakkola's heuristic) on my own solution to a similar
-exercise from the ML course. 
+exercise from the ML course that I took last year.
+
 \subsection{Practical Information}
 I used \emph{python}, \emph{numpy} and SVM solver
 from the \emph{sklearn} package. The experiment were ran on my laptop, running
@@ -60,18 +61,24 @@ Linux and with following hardware specifications:
 
 \subsection{Theory}
 I used the slightly tighter version of PAC-Bayes-kl inequality, as described in
-the assignment and in paper. Furthermore, I used a following numerically stable
+the assignment and in the paper. Furthermore, I used a following numerically stable
 update rule for $\rho$, as suggested in the assignment text.
 \[
 \rho(h) = 
 \frac{\left.\pi(h) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}(h, S)}-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right.}\right)}{\sum_{h^{\prime}} \pi\left(h^{\prime}\right) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}}\left(h^{\prime}, S\right)-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right)}}
 \]
+I also used weighted majority vote aggregation (the discrete case), as described
+in the lecture notes, by calculating.
+\[
+\mathrm{MV}_{\rho}(X)=\operatorname{sign}\left(\sum_{h \in \mathcal{H}} \rho(h) h(X)\right)
+\]
+where $\operatorname{sign}(0)=1$
 
 \subsection{Implementation}
 
 \subsection{Results}
-I decided to not repeat the ``sin'', committed in the original paper and
-repeated the whole experiment 25 times and found the average of the gathered
+I decided not to repeat the ``sin'' that was committed in the original paper and
+repeated the whole experiment 25 times and find the average of the gathered
 results. Moreover, I calculated the standard deviation of the losses and
 runtimes for both methods:
 
@@ -89,12 +96,15 @@ implementation can be found in file \texttt{experiment.py} in
 
 \section{Conclusion}
 I reproduced the experiment from the paper and managed to achieve a similar
-looking result. The values of test loss are closer to the baseline model when
-the value of $m$ approaches $n$, as in the paper. Furthermore, the runtime
-for the method, used in the paper is much better than the baseline model. The
-difference is very similar to the experiment in the paper.
-As one would expect, there are differences between the plots due
-to random nature of the algorithm.
+looking result. The test loss of the PAC-Bayes aggregation decreases with
+increasing $m$, and it nears the test loss of the baseline model when the value
+of $m$ approaches $n$. \\
+Furthermore, the runtime for the PAC-Bayes aggregation method
+is much better than the baseline model. The runtime grows
+linearly with the value of $m$ (which looks exponential on the plot due to
+logarithmic scale of x-axis), which is akin to the results in the paper. \\
+Lastly, as one would expect, there are discrepancies between my plot and the
+original due to nondeterministic nature of the algorithm.
 
 \begin{figure}
   \centering
