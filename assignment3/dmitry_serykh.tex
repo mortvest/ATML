@@ -48,54 +48,79 @@
 In this assignment, I have attempted to reproduce the second experiment from
 Thiemann et al for the Ionosphere dataset. I based a portion of my implementation
 (including the calculation Jaakkola's heuristic) on my own solution to a similar
-exercise from the DIKU ML course that I took last year. The source code for my
-implementation can be found in file \texttt{experiment.py} in
-\textbf{handin.zip}.
-
-
-\section{Practical Information}
-I used \emph{python}, \emph{numpy} and SVM solver
-from the \emph{sklearn} package. The experiment were ran on my laptop, running
-Linux and with following hardware specifications:
+exercise from the DIKU ML course that I took last year. I used \emph{python},
+\emph{numpy} and SVM solver from the \emph{sklearn} package. The experiment were
+ran on my laptop, running Linux and with following hardware specifications:
 \begin{verbatim}
  CPU: Intel Core i7-3520M @ 4x 3.6GHz
  RAM: 7682MiB
 \end{verbatim}
+The source code for my
+implementation can be found in file \texttt{experiment.py} in
+\textbf{handin.zip}.
 
-\section{Theory}
-I used the slightly tighter version of PAC-Bayes-kl inequality, as described in
-the paper:
-\[
-\mathrm{kl}\left(\mathbb{E}_{\rho}[\hat{L}(h, S)] \|
-\mathbb{E}_{\rho}[L(h)]\right) \leq \frac{\mathrm{KL}(\rho \| \pi)+\ln \frac{2
-    \sqrt{n-r}}{\delta}}{n-r}
-\]
-which holds with probability $1 - \delta$ for all distributions $\rho \in
-\mathcal{H}$. I used the numerical inversion of the kl divergence from the first
-assignment in order to bound the test loss of the PAC-Bayesian aggregation model.\\\\
+\section{Theory and Implementation}
+I split the dataset into $n=200$ training points and 150 points for the test
+set. The split is performed randomly and done before each time, the experiment is performed.
+
+\subsection{Training of SVMs}
+For the baseline model I have used RDF kernel SVM tuned by cross validation. The
+parameter grid for selecting the soft-margin parameter, $C$, and the bandwidth
+parameter $\gamma$ was constructed identically to the paper (bottom half of
+p.10), hence the values for the grid of $\gamma$ were selected using the Jaakkola's
+heuristic. \\\\
+For the training of $m$ ``weak'' SVM's, a random value of
+$\gamma$ was chosen from the same set of values as in the training of the
+baseline model. According to the paper, the choice of $C$ was unnecessary,
+hence the default value of 1 was chosen.
+Each of the ``weak'' SVMs was trained on a randomly chosen subset of the
+training set of length $r$ and validated on the rest. I picked $r=35$ and ran
+the training procedure with 20 values of $m$ in $[1, n]$.
+
+\subsection{Alternating Minimization}
 I used a following numerically stable
 update rule for $\rho$, as suggested in the assignment text.
 \[
 \rho(h) = 
 \frac{\left.\pi(h) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}(h, S)}-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right.}\right)}{\sum_{h^{\prime}} \pi\left(h^{\prime}\right) e^{-\lambda(n-r)\left(\hat{L}^{\mathrm{val}}\left(h^{\prime}, S\right)-\hat{L}_{\mathrm{min}}^{\mathrm{val}}\right)}}
 \]
-For the $\lambda$ update, I used the formula from the paper:
+For the $\lambda$ update, I used the formula from the paper, but with $n$
+substituted for $(n-r)$ and $\mathbb{E}_{\rho}[\hat{L}(h,S)]$ substituted for 
+$\mathbb{E}_{\rho}[\hat{L}^{val}(h,S)]$:
 \[
-\lambda=\frac{2}{\sqrt{\frac{2(n-r) \mathbb{E}_{\rho}[\hat{L}(h, S)]}{\left(\mathrm{KL}(\rho \| \pi)+\ln \frac{2 \sqrt{(n-r)}}{\delta}\right)}+1+1}}
+\lambda=\frac{2}{\sqrt{\frac{2(n-r) \mathbb{E}_{\rho}[\hat{L}^{val}(h,S)]}
+    {\left(\mathrm{KL}(\rho \| \pi)+\ln \frac{2
+        \sqrt{(n-r)}}{\delta}\right)}+1+1}}
 \]
-I used uniform distribution for the value of $\pi(h)$ and the initial value of
-$\rho(h)$. I chose 1 to be the initial value of $\lambda$ and set $\delta =
-0.05$, as in the paper. I also used weighted majority vote aggregation (the
-discrete case), as described in the lecture notes, by calculating.
+I used uniform distribution for the value of $\pi(h)=\frac{1}{m}$ and $1$ for
+the initial value of $\lambda$. I also set $\delta = 0.05$, as in the paper.
+Moreover, I used a threshold value $\varepsilon = 0.001$, which is compared to
+the average difference between the old and new values of $\rho$.
+
+\subsection{Aggregation}
+I used weighted majority vote aggregation (the discrete case), as described
+in the lecture notes, by calculating.
 \[
 \operatorname{sign}\left(\sum_{h \in \mathcal{H}} \rho(h) h(X)\right)
 \]
-where I chose $\operatorname{sign}(0)=1$\\\\
+where I chose $\operatorname{sign}(0)=1$
+
+\subsection{Bound}
+For the bound, I used the slightly tighter version of PAC-Bayes-kl inequality,
+as described in the paper:
+\[
+\mathrm{kl}\left(\mathbb{E}_{\rho}[\hat{L}^{val}(h, S)] \|
+\mathbb{E}_{\rho}[L(h)]\right) \leq \frac{\mathrm{KL}(\rho \| \pi)+\ln \frac{2
+    \sqrt{n-r}}{\delta}}{n-r}
+\]
+which holds with probability $1 - \delta$ for all distributions $\rho \in
+\mathcal{H}$. I used the numerical inversion of the kl divergence from the first
+assignment in order to bound the test loss of the PAC-Bayesian aggregation model.
 
 \section{Results}
 I decided not to repeat the ``sin'' that was committed in the original paper and
 repeated the whole experiment 25 times and find the average of the gathered
-results. Moreover, I calculated the standard deviation of the test losses and
+results. In addition, I calculated the standard deviation of the test losses and
 runtimes for both methods:
 
 \begin{verbatim}
@@ -124,7 +149,7 @@ the main data trends of the original are captured on my plot.
 \vspace*{\fill}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{code/plt_avg25_1}
+  \includegraphics[width=\textwidth]{code/plt_avg25_2}
   \caption{Comparison of PAC-Bayesian aggregation with RBF kernel SVM
     tuned by cross-validation for the Ionosphere dataset. Averaged over 25 experiments, $n=200$, $r=35$}
   \label{plt1}

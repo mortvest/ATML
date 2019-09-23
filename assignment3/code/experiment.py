@@ -263,8 +263,8 @@ def main():
     n = 200
     r = data.shape[1]
     delta = 0.05
-    # ms = np.logspace(0.4, np.log10(n), num=n_ticks, endpoint=True).astype(int)
-    ms = np.logspace(0.1, np.log10(n), num=n_ticks, endpoint=True).astype(int)
+    ms = np.logspace(0.3, np.log10(n), num=n_ticks, endpoint=True).astype(int)
+    if debug: print(ms)
 
     # collecting results
     losses_s = []
