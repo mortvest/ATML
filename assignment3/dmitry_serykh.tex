@@ -67,7 +67,7 @@ set. The split is performed randomly and done before each time, the experiment i
 For the baseline model I have used RDF kernel SVM tuned by cross validation. The
 parameter grid for selecting the soft-margin parameter, $C$, and the bandwidth
 parameter $\gamma$ was constructed identically to the paper (bottom half of
-p.10), hence the values for the grid of $\gamma$ were selected using the Jaakkola's
+p.10), hence the values for the grid of $\gamma$ were selected using Jaakkola's
 heuristic. \\\\
 For the training of $m$ ``weak'' SVM's, a random value of
 $\gamma$ was chosen from the same set of values as in the training of the
@@ -94,7 +94,7 @@ $\mathbb{E}_{\rho}[\hat{L}^{val}(h,S)]$:
 \]
 I used uniform distribution for the value of $\pi(h)=\frac{1}{m}$ and $1$ for
 the initial value of $\lambda$. I also set $\delta = 0.05$, as in the paper.
-Moreover, I used a threshold value $\varepsilon = 0.001$, which is compared to
+Moreover, I used a threshold value $\varepsilon = 0.001$, which was compared to
 the average difference between the old and new values of $\rho$.
 
 \subsection{Aggregation}
@@ -115,7 +115,7 @@ as described in the paper:
 \]
 which holds with probability $1 - \delta$ for all distributions $\rho \in
 \mathcal{H}$. I used the numerical inversion of the kl divergence from the first
-assignment in order to bound the test loss of the PAC-Bayesian aggregation model.
+assignment and same values of $\delta$ and $\pi$ as before.
 
 \section{Results}
 I decided not to repeat the ``sin'' that was committed in the original paper and
