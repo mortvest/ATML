@@ -1,0 +1,154 @@
+\documentclass[a4paper]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+%% \usepackage{subfigure}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{stmaryrd}
+\usepackage{a4wide}
+
+\lstset{
+  frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  formfeed=newpage,
+  tabsize=4,
+  comment=[l]{\#},
+  breaklines=true,
+  basicstyle=\small
+}
+
+\newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
+\newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
+\newcommand{\avg}[1]{\sum_{i=1}^{#1}X_i}
+%% \newcommand{\dotp}[2]{\langle #1 + #2 \rangle}
+%% \newcommand{\dotp}[2]{\ensuremath{\frac{#1}{#2}}}
+\newcommand{\dotpr}[2]{\langle #1,\; #2 \rangle}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+
+\title{\vspace{-5cm}ATML Home Assignment 3}
+\author{Dmitry Serykh (qwl888)}
+
+\begin{document}
+\maketitle
+\section{Majority Vote}
+\label{sec:1}
+\subsection{}
+\label{subsec:11}
+Let hypotheses $h_1$, $h_2$ and $h_3$ be defined as on Table \ref{tab:1}. Then
+$L(h)=\frac{1}{3}$ and $L(MV) = 0$ for all $h \in \mathcal{H}$  since the
+prediction values match the true value for all $x \in \mathcal{X}$ and
+$MV$ is a uniformly weighted majority vote.\\
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+True value & $h_1$ & $h_2$ & $h_3$ & $MV_{\rho}$ \\ \hline
+-1 & 1 & -1 & -1 & -1 \\ \hline
+-1 & -1 & 1 & -1 & -1 \\ \hline
+-1 & -1 & -1 & 1 & -1 \\ \hline
+$L$ & $\frac{1}{3}$ & $\frac{1}{3}$ & $\frac{1}{3}$ & 0 \\ \hline
+\end{tabular}
+\caption{}
+\label{tab:1}
+\end{table}
+
+\subsection{}
+\label{subsec:22}
+Let hypotheses $h_1$, $h_2$ and $h_3$ be defined as on Table \ref{tab:2}. Then
+$L(h)=\frac{2}{3}$ and $L(MV) = 1$ for all $h \in \mathcal{H}$  since none of the
+vote majority predictions match the true value for all $x \in \mathcal{X}$ and
+$MV$ is a uniformly weighted majority vote.\\
+Therefore it follow that $L(MV) > L(h)$ for all $h\in \mathcal{H}$.
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+True value & $h_1$ & $h_2$ & $h_3$ & $MV_{\rho}$ \\ \hline
+1 & 1 & -1 & -1 & -1 \\ \hline
+1 & -1 & 1 & -1 & -1 \\ \hline
+1 & -1 & -1 & 1 & -1 \\ \hline
+$L$ & $\frac{2}{3}$ & $\frac{2}{3}$ & $\frac{2}{3}$ & 1 \\ \hline
+\end{tabular}
+\caption{}
+\label{tab:2}
+\end{table}
+
+\subsection{}
+\label{subsec:23}
+\subsubsection*{a)}
+Since $L(h_1) = L(h_2) = L(h_3) = p$ and errors of $h_1$, $h_2$ and $h_3$ are
+independent, the probability for a hypothesis of getting a wrong prediction is
+$p$. Then, the probability of $MV$ getting a wrong prediction equals the
+probability of at least 2 hypotheses getting a wrong prediction:
+\[
+\binom{3}{3}p^3 + \binom{3}{2}p^3 = 4p^3
+\]
+Then:
+\begin{align*}
+  L(MV) = 4p^3
+\end{align*}
+
+\subsubsection*{b)}
+I know the value of $L(MV)$ and that $L$ is the 0-1 loss. 
+Therefore, I can solve the inequality for $0 \leq p \leq  1$:
+\begin{align*}
+  4p^3 &< p\\
+  p^2 &< \frac{1}{4}\\
+  0 < &p < \frac{1}{2}\\
+\end{align*}
+Thus, for $0 < p < \frac{1}{2}$ we have:
+\[
+L(MV) < p
+\]
+
+\section{Regularization by Relative Entropy and the Gibbs Distribution}
+\label{sec:2}
+
+\section{Follow The Leader (FTL) algorithm for i.i.d. full information games}
+\label{sec:3}
+
+
+\end{document}
+
+%% \begin{figure}
+%%   \centering
+%%   \begin{subfigure}[b]{\textwidth}
+%%     \centering
+%%     \includegraphics[scale=0.8]{handin/plt51}
+%%     \caption{Classification of the training set}
+%%   \end{subfigure}
+%%   \begin{subfigure}[b]{\textwidth}
+%%     \centering
+%%     \includegraphics[scale=0.8]{handin/plt52}
+%%     \caption{Classification of the test set}
+%%   \end{subfigure}
+%%   \caption{Exercise 5: Logistic Regression Applied to the Datasets}
+%%   \label{plt5}
+%% \end{figure}
+
+%% \begin{lstlisting}[caption="Calculation of g"]
+%% def calc_g(Xs, y, w):
+%%     N = np.shape(Xs)[0]
+%%     # use matrix X of xs instead of for-loop = much faster
+%%     X = np.c_[Xs, np.ones(N)]
+%%     num = y.T * X
+%%     denum = 1 + np.exp(y * (w @ X.T))
+%%     M = num.T/denum
+%%     # return mean of each row
+%%     return (-1 * np.mean(M, axis=1))
+%% \end{lstlisting}
