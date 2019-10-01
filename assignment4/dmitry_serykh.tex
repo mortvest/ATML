@@ -118,6 +118,64 @@ L(MV) < p
 
 \section{Regularization by Relative Entropy and the Gibbs Distribution}
 \label{sec:2}
+I start by dropping the last constraint, hence the problem becomes:
+%% \begin{align*}
+%%   &\min _{\rho_{1}, \ldots, \rho_{m}}
+%%   \quad &\alpha \sum_{h=1}^{m} \rho_{h} L_{h}+\sum_{h=1}^{m} \rho_{h} \ln \frac{\rho_{h}}{\pi_{h}} \\
+%%   &\text{s.t.} \quad &\sum_{h=1}^{m} \rho_{h}=1
+%% \end{align*}
+\[
+\begin{array}
+  {ll}{\min _{\rho_{1}, \ldots, \rho_{m}}} &
+  {\alpha \sum_{h=1}^{m} \rho_{h} L_{h}+\sum_{h=1}^{m} \rho_{h} \ln \frac{\rho_{h}}{\pi_{h}}} \\
+  {\text {s.t.}} & {\sum_{h=1}^{m} \rho_{h}=1}
+\end{array}
+\]
+Let $\rho$ be the vector of $\rho_1,...,\rho_m$, and
+I define two functions:
+\begin{align*}
+g(\rho) &= \alpha \sum_{h=1}^{m} \rho_{h} L_{h}+\sum_{h=1}^{m} \rho_{h} \ln \frac{\rho_{h}}{\pi_{h}}\\
+&= \alpha \sum_{h=1}^{m} \rho_{h} L_{h}+\sum_{h=1}^{m} \rho_{h} \ln \rho_{h} - \sum_{h=1}^{m}\rho_{h} \ln \pi_{h}\\
+h(\rho) &= \sum_{h=1}^{m} \rho_{h} 
+\end{align*}
+and their gradients:
+\begin{align*}
+  \nabla g(\rho) &= \alpha L_{h} + \ln \rho_{h} + 1 - \ln \pi_{h}\\
+  \nabla h(\rho) &= 1
+\end{align*}
+I then use the method of Lagrange multipliers to find the solution to the above
+problem and solve the equality:  
+\begin{align*}
+  \nabla g(\rho) + \lambda h(\rho) &= 0\\
+  \alpha L_{h} + \ln \rho_{h} + 1 - \ln \pi_{h} + \lambda \cdot 1 &= 0\\
+  \ln \rho_{h} &= -\alpha L_{h} - 1 + \ln \pi_{h} - \lambda\\
+  \rho_{h} &= e^{-\alpha L_{h} - 1 + \ln \pi_{h} - \lambda}\\
+  \rho_{h} &= e^{\ln \pi_h} \cdot e^{-\alpha L_{h} - 1 + \ln \pi_{h} - \lambda}\\
+  \rho_{h} &= \pi_{h}e^{-\alpha L_{h} - 1 - \lambda} 
+\end{align*}
+The value of $\rho_h$ is a prodcut of two functions. $\pi_h \geq 0$ for all $h$
+according to the definition of the ``prior distribution'' in the lecture notes.
+The other factor is an exponential function with base $e>0$,
+hence it can not be negative. Therefore, the value of $\rho_h \geq 0$ for all
+$h$ and the solutions for the two problems from the assignment text are
+identical. \\\\
+I then find the solution, such that the constraint $\sum_{h=1}^m \rho_h = 1$ is
+satisfied by solving for $\lambda$:
+\begin{align*}
+  \sum_{h=1}^m\pi_{h}e^{-\alpha L_{h} - 1 - \lambda} &= 1\\
+  e^{ - 1 - \lambda}\sum_{h=1}^m\pi_{h}e^{-\alpha L_{h}} &= 1\\
+  e^{ - 1 - \lambda} &= \frac{1}{\sum_{h=1}^m\pi_{h}e^{-\alpha L_{h}}}\\
+  - 1 - \lambda &= \ln{1} - \ln\left(\frac{1}{\sum_{h=1}^m\pi_{h}e^{-\alpha L_{h}}} \right)\\
+  \lambda &= \ln\left(\sum_{h=1}^m\pi_{h}e^{-\alpha L_{h}}\right) - 1
+\end{align*}
+and then inserting the result into the value of $\rho_h$, that I found earlier:
+\begin{align*}
+  \rho_{h} &= \pi_{h}e^{-\alpha L_{h} - 1 - \lambda} \\
+  &= \pi_{h}e^{-\alpha L_{h} - 1 - (\ln\left(\sum_{h=1}^m\pi_{h}e^{-\alpha L_{h}}\right) - 1)} \\
+  &= \pi_{h}e^{-\alpha L_{h} - \ln\left(\sum_{h=1}^m\pi_{h}e^{-\alpha L_{h}}\right)} \\
+  &= \frac{\pi_{h}e^{-\alpha L_{h}}}{\sum_{h=1}^m\pi_{h}e^{-\alpha L_{h}}}
+\end{align*}
+That is exactly the solution that was described in the assignment text.
 
 \section{Follow The Leader (FTL) algorithm for i.i.d. full information games}
 \label{sec:3}
@@ -146,7 +204,7 @@ Then, by linearity of expectation:
   \bar{R}_T &\leq \sum_{a} \Delta(a) \sum_{t=1}^{T}\mathbb{P}\left\{\hat{\mu}_{t-1}(a) \geq \hat{\mu}_{t-1}\left(a^{*}\right)\right\}
 \end{align*}
 I will bound this probability by using the same method as in the lecture
-notes (p. 56):
+notes (page 56):
 \begin{align*}
   \mathbb{P}\left\{\hat{\mu}_{t-1}(a) \geq \hat{\mu}_{t-1}\left(a^{*}\right)\right\}
   &\leq \mathbb{P}\left(\hat{\mu}_{t-1}(a) \geq \mu(a)+\frac{1}{2}
@@ -169,7 +227,7 @@ can be concluded from the definition:
 \[
 \Delta(a)=\mu\left(a^{*}\right)-\mu(a) = \max _{a}[\mu(a)] - \mu(a) \geq 0
 \]
-Then, if we assume that $\Delta(a) \neq 0$, the
+Then, if we assure that $\Delta(a) > 0$, the
 inequality becomes strict, and formula for the geometric series can be applied:
 \[
 \sum_{t=0}^{\infty} r^{t}=\frac{1}{1-r}\tag{for $r<1$}
@@ -178,7 +236,6 @@ Hence, my final bound on the pseudo regret is:
 \[
 \bar{R}_T \leq \sum_{a:\; \Delta(a) > 0} \frac{2}{1- e^{-\frac{\Delta(a)^2}{2}}}\Delta(a) 
 \]
-
 \end{document}
 
 %% \begin{figure}
