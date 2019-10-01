@@ -121,7 +121,63 @@ L(MV) < p
 
 \section{Follow The Leader (FTL) algorithm for i.i.d. full information games}
 \label{sec:3}
-
+%% I will solve the problem for $K=2$, and I will work with rewards as in Section
+I will work with rewards as in Section
+5.3 in the lecture notes. I start by looking at the value of
+the pseudo regret, which can be found on page 55 in the lecture notes:
+\begin{align*}
+  \bar{R}_T &= \sum_{a} \Delta(a) \mathbb{E}\left[N_{T}(a)\right]
+  %% \\
+  %% &= \Delta \mathbb{E}\left[N_{T}(a)\right]
+\end{align*}
+I know from the assignment text that:
+\[
+N_{T}(a)=\sum_{t=1}^{T} \mathbb{I}_{\left\{A_{t}=a\right\}}
+\]
+and
+\[
+\mathbb{E}\left[\mathbb{I}_{\left\{A_{t}=a\right\}}\right]
+\leq \mathbb{P}\left\{\hat{\mu}_{t-1}(a) \geq \max _{a^{\prime}}
+\hat{\mu}_{t-1}\left(a^{\prime}\right)\right\}
+\leq \mathbb{P}\left\{\hat{\mu}_{t-1}(a) \geq \hat{\mu}_{t-1}\left(a^{*}\right)\right\}
+\]
+Then, by linearity of expectation:
+\begin{align*}
+  \bar{R}_T &\leq \sum_{a} \Delta(a) \sum_{t=1}^{T}\mathbb{P}\left\{\hat{\mu}_{t-1}(a) \geq \hat{\mu}_{t-1}\left(a^{*}\right)\right\}
+\end{align*}
+I will bound this probability by using the same method as in the lecture
+notes (p. 56):
+\begin{align*}
+  \mathbb{P}\left\{\hat{\mu}_{t-1}(a) \geq \hat{\mu}_{t-1}\left(a^{*}\right)\right\}
+  &\leq \mathbb{P}\left(\hat{\mu}_{t-1}(a) \geq \mu(a)+\frac{1}{2}
+  \Delta(a)\right)+\mathbb{P}\left(\hat{\mu}_{t-1}\left(a^{*}\right) \leq
+  \mu^{*}-\frac{1}{2} \Delta(a)\right) \\
+  &\leq e^{-2(t-1) \cdot (\frac{1}{2} \Delta(a))^2} + e^{-2(t-1) \cdot (-\frac{1}{2} \Delta(a))^2} \\
+  &=2e^{-\frac{(t-1)\Delta(a)^2}{2}}
+\end{align*}
+The last inequality holds because of the Hoeffding's inequality, where
+$\varepsilon = \pm \frac{1}{2}\Delta(a)$ and $n=t-1$.
+I use the bound on the probability to bound the value of the pseudo regret:
+\begin{align*}
+  \bar{R}_T &\leq \sum_{a} \Delta(a)\sum_{t=1}^{T}2e^{-\frac{(t-1)\Delta(a)^2}{2}}\\
+  &=\sum_{a} 2\Delta(a)\sum_{k=0}^{T}(e^{-\frac{\Delta(a)^2}{2}})^k \tag{$k=t-1$} \\
+  &\leq \sum_{a} 2\Delta(a)\sum_{k=0}^{\infty}(e^{-\frac{\Delta(a)^2}{2}})^k 
+  \tag{since $e > 0$}
+\end{align*}
+$e^{-\frac{\Delta(a)^2}{2}} \leq 1$ since the value of $\Delta(a) \geq 0$, which
+can be concluded from the definition:
+\[
+\Delta(a)=\mu\left(a^{*}\right)-\mu(a) = \max _{a}[\mu(a)] - \mu(a) \geq 0
+\]
+Then, if we assume that $\Delta(a) \neq 0$, the
+inequality becomes strict, and formula for the geometric series can be applied:
+\[
+\sum_{t=0}^{\infty} r^{t}=\frac{1}{1-r}\tag{for $r<1$}
+\]
+Hence, my final bound on the pseudo regret is:
+\[
+\bar{R}_T \leq \sum_{a:\; \Delta(a) > 0} \frac{2}{1- e^{-\frac{\Delta(a)^2}{2}}}\Delta(a) 
+\]
 
 \end{document}
 
