@@ -26,7 +26,7 @@ class Plot():
         """implement for each type of plot"""
         pass
     def print_status(self):
-        pass
+        print("{} for K={}, mu={}".format(self.label(), self.K, self.mu))
 
 class UCB1(Plot):
     """generic UCB1"""
@@ -66,17 +66,13 @@ class UCB1(Plot):
 
 class UCB1_notes(UCB1):
     def label(self):
-        return "UCB from the lecture notes"
+        return "UCB1 from the lecture notes"
     def bound(self, t, N):
         return np.sqrt((3 * np.log(t))/(2 * N))
-    def print_status(self):
-        print("UCB notes for K={}, mu={}".format(self.K, self.mu))
 
 class UCB1_improved(UCB1):
     def label(self):
-        return "Improved UCB1"
-    def print_status(self):
-        print("UCB improved for K={}, mu={}".format(self.K, self.mu))
+        return "UCB1 improved"
     def bound(self, t, N):
         return np.sqrt(np.log(t)/N)
 
@@ -85,15 +81,35 @@ class EXP3(Plot):
         return "EXP3"
     def __eta_t(self, K, t):
         return np.sqrt(np.log(K)/(t * K))
+    def test(self):
+        return self.calc_regrets(self.T, self.K, self.mu_star, self.mu)
     def calc_regrets(self, T, K, mu_star, mu):
         # init data
         Ls = np.zeros(K)
         ps = np.zeros(K)
+        probs = np.array([mu_star] + [mu] * (K-1))
+        # number of time each hand was played
+        Ns = np.ones(K)
+        regrets = np.zeros(T)
         # iteration
         for t in range(1, T+1):
-            pass
-        # eta = self.__eta_t(K, t)
-
+            # calculate learning rate
+            eta = self.__eta_t(K, t)
+            # calculate ps:
+            ex = - eta * Ls
+            # XXX Does this work?
+            ps = np.exp(ex)/(np.sum(np.exp(ex)))
+            # sample hand based on p
+            hand = np.random.choice(ps.shape[0], p=ps)
+            # play the hand
+            gain = 1-one_zero_with_prob(probs[hand])
+            l_wave = gain/ps[hand]
+            # update Ls
+            Ls[hand] += l_wave
+            Ns[hand] += 1
+            emp_reg = empirical_regret(Ns, (mu_star - probs))
+            regrets[t-1] = emp_reg
+        return regrets
 
 
 def empirical_regret(N_ts, deltas):
@@ -106,8 +122,8 @@ def plot(T, mu_star, K, mu, n_reps):
     if debug: print("Plotting for mu={}".format(mu))
     # define plot types
     plots = [UCB1_notes(T, mu_star, mu, K, n_reps),
-             UCB1_improved(T, mu_star, mu, K, n_reps)]
-             # EXP3(T, mu_star, mu, K, n_reps)]
+             UCB1_improved(T, mu_star, mu, K, n_reps),
+             EXP3(T, mu_star, mu, K, n_reps)]
     # plot each type
     for p in plots:
         if debug: p.print_status()
@@ -127,9 +143,9 @@ def main():
     mus = [mu_star - mu for mu in mu_diffs]
     n_reps = 10
 
-    # plot(T, mu_star, Ks[1], mus[1], n_reps)
-    x = EXP3(T, mu_star, mus[1], Ks[1], n_reps)
-    print(x.calc_regrets)
+    plot(T, mu_star, Ks[1], mus[1], n_reps)
+    # x = EXP3(T, mu_star, mus[1], Ks[1], n_reps)
+    # print(x.test())
 
     # for mu in mus:
     #     for K in Ks:
