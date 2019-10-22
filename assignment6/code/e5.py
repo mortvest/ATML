@@ -133,8 +133,6 @@ class EXP3(Plot):
         return self.calc_regrets(self.T, self.K, self.mu_star, self.mu, self.adv_seq)
     def calc_regrets(self, T, K, mu_star, mu, adv_seq):
         # init data
-        adv_seq = np.vstack((np.array([0]*K),adv_seq))[:-1]
-        # print(adv_seq)
         Ls = np.zeros(K)
         ps = np.zeros(K)
         probs = np.array([mu_star] + [mu] * (K-1))
@@ -142,8 +140,7 @@ class EXP3(Plot):
         Ns = np.ones(K)
         regrets = np.zeros(T)
         # iteration
-        for t in range(K+1, T+1):
-            n = T - K - 1
+        for t in range(1, T+1):
             # calculate learning rate
             eta = self.__eta_t(K, t)
             # calculate ps:
@@ -152,25 +149,17 @@ class EXP3(Plot):
             ps = np.exp(ex)/(np.sum(np.exp(ex)))
             # sample hand based on p
             hand = np.random.choice(ps.shape[0], p=ps)
-            Ns[hand] += 1
             # play the hand
-            if adv_seq is None:
-                reward = 1-one_zero_with_prob(probs[hand])
-                l_wave = reward/ps[hand]
-                # update Ls
-                Ls[hand] += l_wave
-                emp_reg = empirical_regret(Ns, (mu_star - probs))
-                regrets[n] = emp_reg
-            else:
-                reward = 1-adv_seq[n, hand]
-                l_wave = reward/ps[hand]
-                # update Ls
-                Ls[hand] += l_wave
-                regrets[n] = regrets[n-1] + reward
-            regrets = regrets[:T-K]
-        print("sum", np.sum(regrets))
-        return regrets
+            gain = 1-one_zero_with_prob(probs[hand])
+            l_wave = gain/ps[hand]
+            # update Ls
+            Ls[hand] += l_wave
+            Ns[hand] += 1
+            emp_reg = empirical_regret(Ns, (mu_star - probs))
+            regrets[t-1] = emp_reg
 
+        regrets = regrets[:T-K]
+        return regrets
 
 def empirical_regret(N_ts, deltas):
     return np.sum(N_ts * deltas)
@@ -202,21 +191,21 @@ def plot(T, mu_star, K, mu, n_reps, with_stds=True):
 
 def plot_adv(T, K, n_reps, adv_seq):
     if debug: print("Plotting ADV for K={}".format(K))
+    # create adv_sequence
+    adv_seq = create_adv_seq(T, K)
     # define plot types
     plots = [UCB1_notes(T, 0, 0, K, n_reps, "red", adv_seq),
-             EXP3(T, 0, 0, K, n_reps, "green", adv_seq)]
-    # plots = [EXP3(T, 0, 0, K, n_reps, "green", adv_seq)]
+             EXP3(T, 1/2, 0.05, K, n_reps, "green", adv_seq)]
     # plot each type
-    for p in plots:
-        if debug: p.print_status()
-        p.plot_adv()
+    plots[0].plot_adv()
+    plots[1].plot(with_stds=False)
     # define plot parameters
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
-    plt.title(r"Adversarial sequence".format(K))
-    # plt.savefig("plt_adv.png")
-    plt.show()
+    plt.title(r"Adversarial sequence, K={}".format(K))
+    plt.savefig("plt_adv.png")
+    # plt.show()
     plt.clf()
 
 
@@ -251,25 +240,19 @@ def create_adv_seq(T, K):
 
 def main():
     T = 10000
-    # T = 20
     mu_star = 0.5
     Ks = [2, 4, 8, 16]
     mu_diffs = [0.25, 0.125, 0.0625]
     mus = [mu_star - mu for mu in mu_diffs]
-    # n_reps = 10
-    n_reps = 1
+    n_reps = 10
 
-    adv_seq = create_adv_seq(T, Ks[1])
-
-    # works v
-    plot_adv(T, Ks[1], n_reps, adv_seq)
-
-    # plot(T, mu_star, Ks[1], mus[1], n_reps)
-    # x = EXP3(T, mu_star, mus[1], Ks[1], n_reps, "red")
-    # x.plot()
+    # Stochastic plots
     # for mu in mus:
     #     for K in Ks:
     #         plot(T, mu_star, K, mu, n_reps)
+
+    # adversarial
+    plot_adv(T, Ks[0], n_reps, adv_seq)
 
 
 if __name__ == "__main__":
