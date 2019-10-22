@@ -117,7 +117,7 @@ By setting $\eta$ to the value that we found previously in the bound, we get:
 \begin{align*}
   \mathbb{E}\left[R_{T}\right] &\leq
   \frac{\ln K}{\sqrt{\frac{8\ln{K}}{T}}}+\frac{\sqrt{\frac{8\ln{K}}{T}}}{8} T\\
-  &= \frac{8(\ln{K}) + 8\ln{K}} {8\sqrt{\frac{8\ln{K}}{T}}}\\
+  &= \frac{8\ln{K} + 8\ln{K}} {8\sqrt{\frac{8\ln{K}}{T}}}\\
   &= \frac{2\ln{K}}{\sqrt{\frac{8\ln{K}}{T}}}\\
   &= \sqrt{T} \frac{\ln{K}}{\sqrt{2\ln{K}}}\\
   &= \sqrt{\frac{1}{2}T} \frac{\ln{K}}{\sqrt{\ln{K}}}\\
@@ -125,10 +125,56 @@ By setting $\eta$ to the value that we found previously in the bound, we get:
 \end{align*}
 Which is exactly the bound that we should obtain.
 
-
 \section{The doubling trick}
 \label{sec:3}
+\subsection{}
+\label{subsec:31}
+We will first prove a lemma that would be useful later. In the prove we will use
+the fact that we are allowed to square both sides of inequality if they are positive.
+Let $m\geq0$, then:
+\begin{align*}
+  \sqrt{2}^m -1 \leq \sqrt{2^m -1}\\
+  \sqrt{2^m} -1 \leq \sqrt{2^m -1}\\
+  (\sqrt{2}^m -1)^2 \leq 2^m -1\\
+  2^m - 2\sqrt{2^m} + 1 \leq 2^m - 1\\
+  -2\sqrt{2^m} \leq  -2\\
+  \sqrt{2^m} \geq  1\\
+  2^m \geq  1
+\end{align*}
+This is clearly true, since $m\geq 0$.\\\\
+With $\eta_{m}=\sqrt{\frac{8 \ln N}{2^{m}}}$, the expected regret of Hedge
+within the period $(2^m,...,2^{m+1}-1)$ is bounded by $\sqrt{\frac{1}{2} 2^m\ln{K}}$.
+Then for any $T=2^m - 1$, within the period $(1,...,T)$, we have:
+\begin{align*}
+  \expect{R_T} &\leq \sum_{j=0}^{j=m-1} \sqrt{\frac{1}{2}2^m\ln{K}}\\
+  &=\sqrt{\frac{1}{2}\ln{K}}\sum_{j=0}^{j=m-1} \sqrt{2}^m\\
+  &=\sqrt{\frac{1}{2}\ln{K}} \cdot \frac{1-\sqrt{2}^m}{1-\sqrt{2}} \tag{sum o
+    geom. series}\\
+  &=\sqrt{\frac{1}{2}\ln{K}} \left( \frac{1}{1-\sqrt{2}} - \frac{\sqrt{2}^m}{1-\sqrt{2}} \right)\\
+  &=\sqrt{\frac{1}{2}\ln{K}} \left(
+  \frac{1}{\sqrt{2}-1} \cdot  (\sqrt{2}^m -1)
+  \right)\\
+  &\leq \sqrt{\frac{1}{2}\ln{K}} \cdot \frac{1}{\sqrt{2} - 1} \sqrt{2^m - 1}
+  \tag{by lemma, since $m\geq0$}\\
+  &=\frac{1}{\sqrt{2} - 1} \sqrt{\frac{1}{2}T\ln{K}}
+\end{align*}
+\QEDA
 
+\subsection{}
+\label{subsec:32}
+Any time period can be described as $T = 2^m + T_C$, for $m\geq0$ and
+$0 \leq T_C < 2^m$. Let $T' = 2^{m+1}-1$, then $T \leq T'$ and
+$\expect{R_T} \leq \expect{R_{T'}}$.
+Then, we can use the results from previous subsection and get:
+\begin{align*}
+  \mathbb{E}\left[R_{T}\right]&\leq \mathbb{E}\left[R_{T'}\right]\\
+  &\leq\frac{1}{\sqrt{2}-1} \sqrt{\frac{1}{2} T' \ln K}\\
+  &= \frac{1}{\sqrt{2}-1} \sqrt{\frac{1}{2} (2^{m+1}-1) \ln K}\\
+  &\leq\frac{1}{\sqrt{2}-1} \sqrt{\frac{1}{2} (2^{m+1}+2T_C) \ln K} \tag{since $T_C \geq0$}\\
+  &\leq\frac{\sqrt{2}}{\sqrt{2}-1} \sqrt{\frac{1}{2} (2^m+T_C) \ln K}\\
+  &\leq\frac{\sqrt{2}}{\sqrt{2}-1} \sqrt{\frac{1}{2} T \ln K}
+\end{align*}
+\QEDA
 \section{Empirical evaluation of algorithms for adversarial environments}
 \label{sec:4}
 
