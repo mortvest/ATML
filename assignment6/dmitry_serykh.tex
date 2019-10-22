@@ -123,7 +123,7 @@ By setting $\eta$ to the value that we previously found in the bound, we get:
   &= \sqrt{\frac{1}{2}T} \frac{\ln{K}}{\sqrt{\ln{K}}}\\
   &= \sqrt{\frac{1}{2}T \ln{K}}
 \end{align*}
-Which is exactly the bound that we should obtain.
+That is exactly the bound that we should obtain.
 
 \section{The doubling trick}
 \label{sec:3}
@@ -180,11 +180,22 @@ Then, we can use the results from previous subsection and get:
 
 \section{Empirical evaluation of algorithms for adversarial environments}
 \label{sec:4}
-
+It is relatively easy to show that an algorithm is bad in the adversarial
+  environment. I made something very similar in Subsection \ref{subsec:52}.
+  I showed that UCB1 can exhibit linear regret for a specially constructed
+  sequence of rewards/losses. However, it says nothing about the difficulty of
+  constructing such sequence, which could be very challenging.\\\\
+However, it is clear that it is almost impossible to experimentally show that an
+  algorithm is good in an adversarial environment. I showed in Subsection
+  \ref{subsec:52} that EXP3 performs significantly better for a specific
+  sequence of rewards that was designed to break UCB1. However, this does not
+  mean that EXP3 performs good for all such sequences. The quality of such
+  algorithms can only be shown with a formal proof.
 
 \section{Empirical comparison of UCB1 and EXP3 algorithms}
 \label{sec:5}
 \subsection{Evaluation}
+\label{subsec:51}
 I implemented UCB1 from the notes, the improved UCB (that uses
 $\hat{\mu}_{t-1}(a)+\sqrt{\frac{\ln t}{N_{t-1}(a)}}$) and EXP3 as defined in the
 lecture notes. The source code for my implementation can be seen in file
@@ -199,6 +210,7 @@ UCB1 outperforms EXP3 for $K<8$, but EXP3 is better for some cases
 when $K=8$ and for all cases where $K=16$.
 
 \subsection{Breaking UCB1}
+\label{subsec:52}
 In order to break the UCB1 in the adversarial environment, I designed a
 deterministic sequence using following method:
 \begin{itemize}
