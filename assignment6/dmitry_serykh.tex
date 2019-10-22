@@ -113,7 +113,7 @@ We set the first derivative equal to zero and solve for $\eta$:
 Since second derivative is positive, the extremal point is a minimum.
 \subsection{}
 \label{subsec:23}
-By setting $\eta$ to the value that we found previously in the bound, we get:
+By setting $\eta$ to the value that we previously found in the bound, we get:
 \begin{align*}
   \mathbb{E}\left[R_{T}\right] &\leq
   \frac{\ln K}{\sqrt{\frac{8\ln{K}}{T}}}+\frac{\sqrt{\frac{8\ln{K}}{T}}}{8} T\\
@@ -162,8 +162,9 @@ Then for any $T=2^m - 1$, within the period $(1,...,T)$, we have:
 
 \subsection{}
 \label{subsec:32}
-Any time period can be described as $T = 2^m + T_C$, for $m\geq0$ and
-$0 \leq T_C < 2^m$. Let $T' = 2^{m+1}-1$, then $T \leq T'$ and
+Any time period can be described as $T = 2^m + T_C$, for some $m\geq0$ and
+$0 \leq T_C < 2^m$. \\
+Let $T' = 2^{m+1}-1$, then $T \leq T'$ and since regret can not decrease with time,
 $\expect{R_T} \leq \expect{R_{T'}}$.
 Then, we can use the results from previous subsection and get:
 \begin{align*}
@@ -175,11 +176,52 @@ Then, we can use the results from previous subsection and get:
   &\leq\frac{\sqrt{2}}{\sqrt{2}-1} \sqrt{\frac{1}{2} T \ln K}
 \end{align*}
 \QEDA
+
+
 \section{Empirical evaluation of algorithms for adversarial environments}
 \label{sec:4}
 
+
 \section{Empirical comparison of UCB1 and EXP3 algorithms}
 \label{sec:5}
+\subsection{Evaluation}
+I implemented UCB1 from the notes, the improved UCB (that uses
+$\hat{\mu}_{t-1}(a)+\sqrt{\frac{\ln t}{N_{t-1}(a)}}$) and EXP3 as defined in the
+lecture notes. The source code for my implementation can be seen in file
+\texttt{e5.py} in the \textbf{handin.zip}. I used the required settings and the
+average results of 10 repetitions. Furthermore, I used the suggested formula for
+the empirical pseudo-regret:
+\[
+\bar{R}_{t}^{\mathrm{emp}}=\sum_{s=1}^{t} N_{t}(a) \Delta(a)
+\]
+The results of the comparison can can be seen on 12 plots on Figure \ref{plt1} and \ref{plt2}.
+UCB1 outperforms EXP3 for $K<8$, but EXP3 is better for some cases
+when $K=8$ and for all cases where $K=16$.
+
+\subsection{Breaking UCB1}
+In order to break the UCB1 in the adversarial environment, I designed a
+deterministic sequence using following method:
+\begin{itemize}
+\item The adversary has the knowledge of the used algorithm, hence I made use of
+  a modified UCB1 algorithm in order to generate a sequence of rewards that
+  would maximize the regret. 
+\item I start by giving rewards of 1 to the first hand and 0 to others during the
+  initialization phase. That way, I can keep track of  which hand is considered to be
+  the best by the algorithm.
+\item Then, I run and iteration of UCB1, and when it chooses the best hand to
+  play, I set the reward for that hand equal to 0.
+\item I repeat the process until the number of iterations reach $T$ 
+\end{itemize}
+I executed UCB1 and EXP3 on my sequence for $K=2$ and created a plot for the
+regret (Figure \ref{plt3}). I used deterministic tie-breaking and used a
+following formula for the regret:
+\[
+R_{T}=
+\max _{a} \sum_{t=1}^{T} r_{t}^{a}-
+\sum_{t=1}^{T} r_{t}^{A_{t}}
+\]
+It can be clearly seen on the plot that UCB1 exhibits a linear regret, while
+EXP3 is sublinear as proven during the last lecture.
 \begin{figure}
   \centering
   \begin{subfigure}[b]{0.49\textwidth}
@@ -206,10 +248,47 @@ Then, we can use the results from previous subsection and get:
     \centering
     \includegraphics[width=\textwidth]{code/plt_k4_mu04375}
   \end{subfigure}
-  \caption{Plots for Exercise 5}
-  \label{plt5}
+  \caption{Pseudo regret (average of 10 repetitions), where $\mu$ is the average
+    regret of suboptimal hands}
+  \label{plt1}
 \end{figure}
 
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{code/plt_k8_mu025}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{code/plt_k8_mu0375}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{code/plt_k8_mu04375}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{code/plt_k16_mu025}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{code/plt_k16_mu0375}
+  \end{subfigure}
+  \begin{subfigure}[b]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{code/plt_k16_mu04375}
+  \end{subfigure}
+  \caption{Pseudo regret (average of 10 repetitions), where $\mu$ is the average
+    regret of suboptimal hands, continued}
+  \label{plt2}
+\end{figure}
+\begin{figure}
+  \centering
+    \includegraphics[width=0.7\textwidth]{code/plt_adv}
+  \caption{Regret of UCB1 and EXP3 on the designed adversarial sequence}
+  \label{plt3}
+\end{figure}
 
 \end{document}
 
