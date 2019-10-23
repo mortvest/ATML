@@ -1,0 +1,156 @@
+\documentclass[a4paper]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+%% \usepackage{subfigure}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{stmaryrd}
+\usepackage{a4wide}
+
+\lstset{
+  frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  formfeed=newpage,
+  tabsize=4,
+  comment=[l]{\#},
+  breaklines=true,
+  basicstyle=\small
+}
+%% \renewcommand{\thesubsubsection}{\alph{subsubsection}}
+\newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
+\newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
+\newcommand{\avg}[1]{\sum_{i=1}^{#1}X_i}
+\newcommand{\dotpr}[2]{\langle #1,\; #2 \rangle}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\bs}[1]{\boldsymbol{#1}}
+
+
+\title{\vspace{-5cm}ATML Home Assignment 7}
+\author{Dmitry Serykh (qwl888)}
+
+\begin{document}
+\maketitle
+\section{Policy Gradient Methods}
+\label{sec:1}
+\subsection*{Question 1.1}
+\label{subsec:11}
+I know from the assignment text that:
+\[
+\pi(s, a)=\frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}
+   {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+\]
+then:
+\[
+\pi(s, b)=\frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+   {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+\]
+I start by finding the derivative:
+\begin{align*}
+  \frac{\partial \pi(s, a)}{\partial \bs{\theta}} &=
+  \frac{\bs{\phi}(s,a) e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}
+       {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+  -
+  \frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}
+        \sum_{b} \boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+       {(\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)})^2}\\
+       &=\frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}
+              {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+         \cdot
+         \left(
+         \boldsymbol{\phi}(s, a)-
+         \frac{\sum_{b} \boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+              {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+         \right)
+\end{align*}
+I can then use the compatibility condition to find the partial derivative:
+\begin{align*}
+  \frac{\partial f_{\boldsymbol{w}}(s, a)}{\partial \boldsymbol{w}}
+  &=\frac{\partial \pi(s, a)}{\partial \boldsymbol{\theta}} \frac{1}{\pi(s, a)}\\
+  &=\left(\frac{\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+               {e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}\right)
+    \cdot
+    \left(\frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}
+         {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}\right)
+    \cdot
+    \left(
+    \boldsymbol{\phi}(s, a)-
+    \frac{\sum_{b} \boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+         {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+    \right)\\
+    &=
+    \boldsymbol{\phi}(s, a)-
+    \frac{\sum_{b} \boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+         {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}\\
+    &=
+    \boldsymbol{\phi}(s, a)-
+    \sum_{b} \frac{\boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+         {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}\\
+    &=
+    \boldsymbol{\phi}(s, a)-
+    \sum_{b} \frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
+        {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}
+        }\boldsymbol{\phi}(s, b)\\
+    &=
+    \boldsymbol{\phi}(s, a)-
+    \sum_{b}
+    \pi(s, b)
+    \boldsymbol{\phi}(s, b)
+\end{align*}
+\QEDA
+
+\subsection*{Question 1.2}
+\label{subsec:11}
+
+\subsection*{Question 1.3}
+\label{subsec:11}
+
+\section{Offline Evaluation of Bandit Algorithms}
+\label{sec:2}
+
+
+
+
+\end{document}
+
+%% \section{Empirical comparison of UCB1 and EXP3 algorithms}
+%% \label{sec:5}
+%% \begin{figure}
+%%   \centering
+%%   \begin{subfigure}[b]{0.49\textwidth}
+%%     \centering
+%%     \includegraphics[width=\textwidth]{code/plt_k2_mu025}
+%%   \end{subfigure}
+%%   \begin{subfigure}[b]{0.49\textwidth}
+%%     \centering
+%%     \includegraphics[width=\textwidth]{code/plt_k2_mu0375}
+%%   \end{subfigure}
+%%   \caption{Plots for Exercise 5}
+%%   \label{plt5}
+%% \end{figure}
+
+%% \begin{lstlisting}[caption="Calculation of g"]
+%% def calc_g(Xs, y, w):
+%%     N = np.shape(Xs)[0]
+%%     # use matrix X of xs instead of for-loop = much faster
+%%     X = np.c_[Xs, np.ones(N)]
+%%     num = y.T * X
+%%     denum = 1 + np.exp(y * (w @ X.T))
+%%     M = num.T/denum
+%%     # return mean of each row
+%%     return (-1 * np.mean(M, axis=1))
+%% \end{lstlisting}
