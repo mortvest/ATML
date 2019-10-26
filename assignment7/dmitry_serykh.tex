@@ -1,8 +1,11 @@
 \documentclass[a4paper]{article}
+\usepackage{algorithmic}
+\usepackage[]{algorithm2e}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amsthm}
 \usepackage{amssymb}
+\usepackage{bbold}
 \usepackage[english]{babel}
 \usepackage{float}
 \usepackage{graphicx}
@@ -11,26 +14,25 @@
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
 \usepackage{xcolor}
-%% \usepackage{subfigure}
 \usepackage{pdfpages}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{stmaryrd}
 \usepackage{a4wide}
 
-\lstset{
-  frame=tb,
-  language=Python,
-  aboveskip=3mm,
-  belowskip=3mm,
-  showstringspaces=false,
-  formfeed=newpage,
-  tabsize=4,
-  comment=[l]{\#},
-  breaklines=true,
-  basicstyle=\small
-}
-%% \renewcommand{\thesubsubsection}{\alph{subsubsection}}
+%% \lstset{
+%%   frame=tb,
+%%   language=Python,
+%%   aboveskip=3mm,
+%%   belowskip=3mm,
+%%   showstringspaces=false,
+%%   formfeed=newpage,
+%%   tabsize=4,
+%%   comment=[l]{\#},
+%%   breaklines=true,
+%%   basicstyle=\small
+%% }
+\renewcommand{\thesubsubsection}{\alph{subsubsection})}
 \newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
 \newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
 \newcommand{\avg}[1]{\sum_{i=1}^{#1}X_i}
@@ -39,6 +41,10 @@
 \newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
 \newcommand*{\bs}[1]{\boldsymbol{#1}}
 
+\RestyleAlgo{boxruled}
+\SetKwInput{KwInput}{Input}          
+\SetKwInput{KwOutput}{Output} 
+\SetKwInput{KwInit}{Initialization}           
 
 \title{\vspace{-5cm}ATML Home Assignment 7}
 \author{Dmitry Serykh (qwl888)}
@@ -59,7 +65,7 @@ then:
 \pi(s, b)=\frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
    {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
 \]
-I start by finding the derivative:
+I start by finding the derivative using a CAS:
 \begin{align*}
   \frac{\partial \pi(s, a)}{\partial \bs{\theta}} &=
   \frac{\bs{\phi}(s,a) e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}
@@ -76,12 +82,6 @@ I start by finding the derivative:
          \frac{\sum_{b} \boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
               {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
               \right)\\
-  &=
-   \pi(s, a)\left(
-   \boldsymbol{\phi}(s, a)-
-   \frac{\sum_{b} \boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
-        {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
-   \right)\\
   &=
    \pi(s, a)\left(
   \boldsymbol{\phi}(s, a)-
@@ -121,7 +121,7 @@ I can then use the compatibility condition to find the partial derivative:
 
 \subsection*{Question 1.2}
 \label{subsec:12}
-Let us assume that:
+I assume that:
 \[
 f_{w}(s, a)=\boldsymbol{w}^{\mathrm{T}}\left[\bs{\phi}(s, a)-\sum_{b} \pi(s, b) \bs{\phi}(s, b)\right]
 \]
@@ -137,7 +137,7 @@ then:
   \sum_{a} \pi(s, a) \boldsymbol{w}^{\mathrm{T}}
   \sum_{b} \pi(s, b) \bs{\phi}(s, b)
 \end{align*}
-Hence, my objective can be re-formulated as proving following:
+Hence, my objective can be re-formulated to proving following for all $s\in S$:
 \begin{align*}
   \sum_{a} \pi(s, a) \boldsymbol{w}^{\mathrm{T}}\bs{\phi}(s, a)
   &=
@@ -151,14 +151,14 @@ Hence, my objective can be re-formulated as proving following:
    \sum_{b} \pi(s, b) \bs{\phi}(s, b)
   &=
    \sum_{a} \pi(s, a)\sum_{b} \pi(s, b) \bs{\phi}(s, b)\\
-   \sum_{a} \frac{\pi(s, a)\sum_{b} \pi(s, b) \bs{\phi}(s, b)}
-       {\sum_{b} \pi(s, b) \bs{\phi}(s, b)}
-   &=1\\
+   \sum_{a} \pi(s, a)
+  &=
+   \frac{\sum_{b} \pi(s, b) \bs{\phi}(s, b)}{\sum_{b} \pi(s, b) \bs{\phi}(s, b)}\\
    \sum_{a}\pi(s, a) &= 1
 \end{align*}
-Which is clearly true for $\forall s \in S$, because 
+Which is clearly true for all $s \in S$, because 
    $\sum_{a}\pi(s, a)$ is a sum of probabilities of taking events in state $s$,
-which sum up to one.
+which must sum up to one.
 \QEDA
 \subsection*{Question 1.3}
 \label{subsec:13}
@@ -181,9 +181,55 @@ Which is the requirement of the \emph{compatibility condition}.\QEDA
 
 \section{Offline Evaluation of Bandit Algorithms}
 \label{sec:2}
+\subsection{}
+\label{subsec:21}
 
+\subsection{}
+\label{subsec:22}
+\subsubsection{}
+I start by transforming the EXP3 and USB1 algorithms to work with importance
+sampling.
+The pseudocode for the modified algorithms can be seen of Algorithm \ref{algo1}
+and \ref{algo2} respectively.
+\begin{figure}[ht]
+\begin{algorithm}[H]
+ \caption{Modified \textbf{EXP3}}
+ \label{algo1}
+ \DontPrintSemicolon
+ \KwInput{Learning rates $\eta_1 \geq \eta_2 \geq \dots >0$}
+ $\forall a: L_0(a) = 0$\;
+ \For{$t = 1,2,\dots$ }{
+   $\forall a: p_t(a)=
+   \frac{e^{-\eta_{t} L_{t-1}(a)}}{\sum_{a^{\prime}} e^{-\eta_{t} L_{t-1}\left(a^{\prime}\right)}}$\;
+   Sample $A_t$ according to $p_t$ and play it\;
+   Observe and suffer $\ell_t^{A_t}$\;
+   Set $\tilde{\ell}_t^a = \frac{\ell_t^a \mathbb{1}(A_t=a)}{p_t(a)}
+   \begin{cases} \frac{\ell_t^a}{p_t(a)} & \text{if } A_t=a \\
+                      0                 & \text{otherwise}
+   \end{cases}$\;
+   $\forall a: \tilde{L}_t(a) = \tilde{L}_{t-1}(a) + \tilde{\ell}^a_t$
+ }
+\end{algorithm}
+\end{figure}
 
+\begin{figure}[ht]
+\begin{algorithm}[H]
+ \caption{Modified \textbf{UCB1}}
+ \label{algo2}
+ \DontPrintSemicolon
+ \KwInit{Play each action once}
+ \For{$t = K + 1, K + 2,\dots$ }{
+   $\text { Play } A_{t}=\arg \max _{a} \hat{\mu}_{t-1}(a)+\sqrt{\frac{3 \ln t}{2 N_{t-1}(a)}}$\;
+ }
+\end{algorithm}
+\end{figure}
 
+\subsubsection{}
+\subsubsection{}
+
+\subsubsection{}
+
+\subsubsection{}
 
 \end{document}
 
