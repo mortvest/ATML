@@ -5,7 +5,7 @@
 \usepackage{amsfonts}
 \usepackage{amsthm}
 \usepackage{amssymb}
-\usepackage{bbold}
+%% \usepackage{bbold}
 \usepackage[english]{babel}
 \usepackage{float}
 \usepackage{graphicx}
@@ -138,7 +138,7 @@ then:
   \sum_{a} \pi(s, a) \boldsymbol{w}^{\mathrm{T}}
   \sum_{b} \pi(s, b) \bs{\phi}(s, b)
 \end{align*}
-Hence, my objective can be re-formulated to proving following for all $s\in S$:
+Hence, my objective can be re-formulated into proving following for all $s\in S$:
 \begin{align*}
   \sum_{a} \pi(s, a) \boldsymbol{w}^{\mathrm{T}}\bs{\phi}(s, a)
   &=
@@ -185,22 +185,22 @@ Which is the requirement of the \emph{compatibility condition}.\QEDA
 \subsection{}
 \label{subsec:21}
 I came up with following reasons for why this could be undesirable:
-\begin{enumerate}
+\begin{itemize}
 \item It could be risky to execute an algorithm on unknown quality in a live environment.
-  This could potentially lead to financial or other losses if the new
-  algorithms ends up being bad in practice. That could be partially avoided by
+  This could potentially lead to monetary or other losses if the new
+  algorithm ends up being bad in practice. That could be partially avoided by
   using offline evaluation.
 \item The amount of feedback that could be generated in a live environment could
-  be limited. If we use importance of rejection sampling, we can run it on
-  potentially huge amounts of earlier gathered data. 
+  be limited. If we use importance or rejection sampling, we can potentially run it on
+  huge amounts of data that was gathered earlier.
 \item In order to compare the quality of two algorithms, we want the input data
   of both algorithms to be coming from the same distribution. That can not be
   guaranteed in a live environment. Furthermore, a potential adversary could
   influence our algorithm choice by playing specifically to new algorithm's
-  strengths during the live evaluation of the new algorithm and making it
-  perform better than it really is. That could lead us to choosing a suboptimal
-  algorithm.
-\end{enumerate}
+  strengths/weaknesses during the live evaluation.
+  We could consequently over-/underestimate the actual performance of the new
+  algorithm and risk choosing a suboptimal one.
+\end{itemize}
 
 \subsection{}
 \label{subsec:22}
@@ -221,7 +221,7 @@ and \ref{algo2} respectively.
    \frac{e^{-\eta_{t} L_{t-1}(a)}}{\sum_{a^{\prime}} e^{-\eta_{t} L_{t-1}\left(a^{\prime}\right)}}$\;
    Sample $A_t$ according to $p_t$ and play it\;
    Observe and suffer $\ell_t^{A_t}$\;
-   Set $\tilde{\ell}_t^a = \frac{\ell_t^a \mathbb{1}(A_t=a)}{p_t(a)}
+   Set $\tilde{\ell}_t^a = \frac{\ell_t^a \mathbb{I}(A_t=a)}{p_t(a)}
    \begin{cases} \frac{\ell_t^a}{p_t(a)} & \text{if } A_t=a \\
                       0                 & \text{otherwise}
    \end{cases}$\;
@@ -242,6 +242,44 @@ and \ref{algo2} respectively.
  }
 \end{algorithm}
 \end{figure}
+Then, I will find the regret bound for the modified EXP3.\\\\
+I get the inequality:
+\[
+\expect{R_T} \leq \frac{\ln{K}}{\eta} + \frac{\eta}{2}K^2T
+\]
+I wish to find the value of $\eta$ that minimizes the RHS of the inequality.
+I first find the derivatives:
+\begin{align*}
+  \frac{d}{d\eta} &= \frac{K^2T}{2} - \frac{\ln{K}}{\eta^2}\\
+  \frac{d^2}{d\eta} &= \frac{2\ln{K}}{\eta^3}
+\end{align*}
+Then, solve the inequality:
+\begin{align*}
+  \frac{K^2T}{2} - \frac{\ln{K}}{\eta^2} &= 0\\
+  \frac{K^2T}{2} &= \frac{\ln{K}}{\eta^2}\\
+  \eta^2 &= \frac{2\ln{K}}{K^2T}\\
+  \eta &= \sqrt{\frac{2\ln{K}}{K^2T}}
+\end{align*}
+The second derivative is positive since $K, \eta > 0$, hence the extremal point
+is a minimum. I substitute the found value of $\eta$ in order to obtain the
+bound:
+\begin{align*}
+  \expect{R_T} &\leq 
+  \frac{K}{\sqrt{\frac{2\ln{K}}{K^2T}}} +
+  \frac{\sqrt{\frac{2\ln{K}}{K^2T}}}{2} K^2T \\
+  &= \frac{2\ln{K}}{\sqrt{\frac{2\ln{K}}{K^2T}}}\\
+  &= \sqrt{2}\frac{\ln{K}}{\sqrt{\frac{\ln{K}}{K^2T}}}\\
+  &= \sqrt{2 K^2 T \ln{K}}
+\end{align*}
+I then modify the algorithm into the anytime EXP3, hence the learning rate
+becomes:
+\[
+  \eta_t = \sqrt{\frac{\ln{K}}{K^2t}}
+\]
+while the regret bound becomes:
+\[
+  \expect{R_t} \leq 2\sqrt{K^2 t \ln{K}}
+\]
 
 \subsubsection*{b-d)}
 
