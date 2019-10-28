@@ -41,10 +41,12 @@
 \newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
 \newcommand*{\bs}[1]{\boldsymbol{#1}}
 
+%% algorithms
 \RestyleAlgo{boxruled}
 \SetKwInput{KwInput}{Input}          
 \SetKwInput{KwOutput}{Output} 
 \SetKwInput{KwInit}{Initialization}           
+
 
 \title{\vspace{-5cm}ATML Home Assignment 7}
 \author{Dmitry Serykh (qwl888)}
@@ -55,7 +57,7 @@
 \label{sec:1}
 \subsection*{Question 1.1}
 \label{subsec:11}
-Function $\pi$ is defined as:
+Function $\pi(s,a)$ is defined as:
 \[
 \pi(s, a)=\frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}
    {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
@@ -76,7 +78,6 @@ I start by finding the derivative using a CAS:
        {(\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)})^2}\\
        &=\frac{e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, a)}}
               {\sum_{b} e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
-         \cdot
          \left(
          \boldsymbol{\phi}(s, a)-
          \frac{\sum_{b} \boldsymbol{\phi}(s, b)e^{\boldsymbol{\theta}^{\mathrm{T}} \boldsymbol{\phi}(s, b)}}
@@ -183,10 +184,27 @@ Which is the requirement of the \emph{compatibility condition}.\QEDA
 \label{sec:2}
 \subsection{}
 \label{subsec:21}
+I came up with following reasons for why this could be undesirable:
+\begin{enumerate}
+\item It could be risky to execute an algorithm on unknown quality in a live environment.
+  This could potentially lead to financial or other losses if the new
+  algorithms ends up being bad in practice. That could be partially avoided by
+  using offline evaluation.
+\item The amount of feedback that could be generated in a live environment could
+  be limited. If we use importance of rejection sampling, we can run it on
+  potentially huge amounts of earlier gathered data. 
+\item In order to compare the quality of two algorithms, we want the input data
+  of both algorithms to be coming from the same distribution. That can not be
+  guaranteed in a live environment. Furthermore, a potential adversary could
+  influence our algorithm choice by playing specifically to new algorithm's
+  strengths during the live evaluation of the new algorithm and making it
+  perform better than it really is. That could lead us to choosing a suboptimal
+  algorithm.
+\end{enumerate}
 
 \subsection{}
 \label{subsec:22}
-\subsubsection{}
+\subsubsection*{a)}
 I start by transforming the EXP3 and USB1 algorithms to work with importance
 sampling.
 The pseudocode for the modified algorithms can be seen of Algorithm \ref{algo1}
@@ -219,17 +237,15 @@ and \ref{algo2} respectively.
  \DontPrintSemicolon
  \KwInit{Play each action once}
  \For{$t = K + 1, K + 2,\dots$ }{
-   $\text { Play } A_{t}=\arg \max _{a} \hat{\mu}_{t-1}(a)+\sqrt{\frac{3 \ln t}{2 N_{t-1}(a)}}$\;
+   $\text {Set } A_{t}=\arg \max _{a} \hat{\mu}_{t-1}(a)+\sqrt{\frac{3 \ln t}{2 N_{t-1}(a)}}$\;
+   Observe and suffer $\ell_t^{A_t}$\;
  }
 \end{algorithm}
 \end{figure}
 
-\subsubsection{}
-\subsubsection{}
+\subsubsection*{b-d)}
 
-\subsubsection{}
-
-\subsubsection{}
+\subsubsection*{e)}
 
 \end{document}
 
