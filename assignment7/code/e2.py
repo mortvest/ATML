@@ -12,7 +12,7 @@ class Simulation():
         self.arm_ids = arm_ids
         self.rewards = rewards
 
-    def plot(self, with_stds=True):
+    def plot(self, with_stds=True, with_bound=False):
         acc = []
         n_steps = min(self.T, 1000)
         xs = np.linspace(1, self.T, n_steps, dtype=int)
@@ -23,7 +23,7 @@ class Simulation():
         ys = np.mean(acc, axis=0)[xs-1]
         # main plot
         label = type(self).__name__
-        plt.plot(xs, ys, label=label, color=self.color)
+        # plt.plot(xs, ys, label=label, color=self.color)
         # plot + std
         if with_stds:
             std = np.std(acc, axis=0)[xs-1]
@@ -37,8 +37,18 @@ class Simulation():
                      label="{} - STD".format(label),
                      color=self.color,
                      linestyle='dashed')
+        if with_bound:
+            ys = self.calc_bound()[xs-1]
+            plt.plot(xs,
+                     ys,
+                     label="{} - bound".format(label),
+                     color=self.color,
+                     linestyle='dashed')
 
     def calc_regrets(self):
+        pass
+
+    def calc_bound(self):
         pass
 
     def print_status(self):
@@ -139,6 +149,15 @@ class EXP3(Simulation):
     def __eta_t(self, K, t):
         return np.sqrt(np.log(K)/(t * K**2.0))
 
+    def calc_bound(self):
+        def func():
+            acc = []
+            for t in range(1,self.T+1):
+                bound = 2.0 * np.sqrt(self.K**2.0 * t * np.log(self.K))
+                acc.append(bound)
+            return np.array(acc)
+        return self.compute_cached("bound", func)
+
     def calc_regrets(self):
         def func():
             acc = []
@@ -233,7 +252,7 @@ def extract_bmw_rounds(K, ids, rewards):
     return remap_ids(K, ids, inds, rewards)
 
 
-def plot(T, K_tot, n_reps, ids, rewards, n_worst, with_std=True, bmw=False):
+def plot(K_tot, n_reps, ids, rewards, n_worst=0, bmw=False, with_bound=False, with_std=True):
     if bmw:
         extr_ids, extr_rewards = extract_bmw_rounds(K_tot, ids, rewards)
         file_name ="plt_median.png"
@@ -242,10 +261,10 @@ def plot(T, K_tot, n_reps, ids, rewards, n_worst, with_std=True, bmw=False):
         extr_ids, extr_rewards = extract_worst_rounds(K_tot, ids, rewards, n_worst)
         file_name ="plt_{}_worst.png".format(n_worst)
         K = n_worst + 1
-    ucb1 = UCB1(K, n_reps, "red", extr_ids, extr_rewards)
-    ucb1.plot(with_std)
-    # exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
-    # exp3.plot(with_std)
+    # ucb1 = UCB1(K, n_reps, "red", extr_ids, extr_rewards)
+    # ucb1.plot(with_std)
+    exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
+    exp3.plot(False, with_bound)
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
@@ -260,18 +279,15 @@ def main():
     data = load_cached(data_dir)
     ids = data[:,0].astype(int)
     click_rewards = data[:,1].astype(int)
-    T = ids.shape[0]
-    T = 2000
     K = 16
     n_reps = 1
-    # n_reps = 1
-    n_worst_s = [K-1,1,2,3]
-    # inds, extr_rewards = extract_rounds(K, ids, click_rewards, 1)
 
-    plot(T, K, n_reps, ids, click_rewards, 2)
+    plot(K, n_reps, ids, click_rewards, K-1, with_bound=True)
 
+    # n_worst_s = [K-1,1,2,3]
     # for n_worst in n_worst_s:
-    #     plot(T, K, n_reps, ids, click_rewards, n_worst)
+    #     plot(K, n_reps, ids, click_rewards, n_worst)
+    # plot(K, n_reps, ids, click_rewards, bmw=True)
 
 if __name__ == "__main__":
     main()
