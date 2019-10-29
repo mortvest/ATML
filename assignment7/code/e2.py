@@ -31,7 +31,11 @@ class Simulation():
                      label="{} + STD".format(label),
                      color=self.color,
                      linestyle='dashed')
-
+            plt.plot(xs,
+                     ys-std,
+                     label="{} - STD".format(label),
+                     color=self.color,
+                     linestyle='dashed')
 
     def calc_regrets(self):
         pass
@@ -83,6 +87,15 @@ class UCB1(Simulation):
         cum_reward = self.calc_reward(self.T, self.K)
         return best_rewards_cum - cum_reward
 
+    def __min_arg(self, avgs, random_ties):
+        if random_ties:
+            min_val = np.min(avgs)
+            # min_args = np.argwhere(np.isclose(avgs, min_val)).flatten()
+            min_args = np.argwhere(avgs == min_val).flatten()
+            return np.random.choice(min_args, 1)[0]
+        else:
+            return np.argsort(avgs)[-1]
+
     def calc_reward(self, T, K):
         # initialization
         init_avg = []
@@ -99,7 +112,8 @@ class UCB1(Simulation):
             bound = np.sqrt((3 * np.log(t))/(2 * Ns))
             curr_avgs = bound + avg_rewards
             # find the best hand
-            best_ind = np.argsort(curr_avgs)[-1]
+            best_ind = self.__min_arg(curr_avgs, False)
+
             # play the hand
             avg_old = avg_rewards[best_ind]
             # update times played
@@ -114,22 +128,31 @@ class UCB1(Simulation):
         return cum_reward
 
 
-
 class EXP3(Simulation):
     def play_hand(self, t, a):
         if self.arm_ids[t-1] == a:
-            # return (1 - self.rewards[t-1]) * 16
-            return (1 - self.rewards[t-1]) 
+            return (1 - self.rewards[t-1]) * self.K
         else:
-            return 1
+            return 0
 
     def __eta_t(self, K, t):
-        return np.sqrt(np.log(K)/(t * K))
+        return np.sqrt(np.log(K)/(t * K**2.0))
 
     def calc_regrets(self):
+        def func():
+            acc = []
+            for i in range(self.K):
+                acc.append(np.sum(1-self.rewards[self.arm_ids == i]))
+            arr = np.array(acc)
+            best_id = np.argsort(arr)[0]
+            best_rewards = 1 - np.copy(self.rewards)
+            best_rewards[self.arm_ids!=best_id] = 1.0
+            return np.cumsum(best_rewards) * self.K
+
+        # best_loss_cum = self.compute_cached("best_losses", func)[:self.T]
+        best_loss_cum = func()[:self.T]
         cum_loss = self.calc_loss(self.T, self.K)
-        best_loss = 1 - np.cumsum(self.rewards[:self.T])
-        return cum_loss - best_loss
+        return cum_loss - best_loss_cum
 
     def calc_loss(self, T, K):
         # init data
@@ -148,8 +171,9 @@ class EXP3(Simulation):
             ps = np.exp(ex)/(np.sum(np.exp(ex)))
             # print(ps)
             # sample hand based on p
-            # hand = np.random.choice(ps.shape[0], p=ps)
-            hand = np.random.randint(self.K)
+            hand = np.random.choice(ps.shape[0], p=ps)
+            # print(hand)
+            # hand = np.random.randint(self.K)
             # play the hand
             loss = self.play_hand(t, hand)
 
@@ -173,7 +197,7 @@ def load_cached(data_dir):
         return data
 
 
-def extract_rounds(K, ids, rewards, n_worst):
+def extract_worst_rounds(K, ids, rewards, n_worst):
     # TODO: replace with 0...n
     acc = []
     for a in range(K):
@@ -189,12 +213,17 @@ def extract_rounds(K, ids, rewards, n_worst):
     return new_ids, new_rewards
 
 
-def plot(T, K, n_reps, ids, rewards, n_worst, with_std=False):
-    extr_ids, extr_rewards = extract_rounds(K, ids, rewards, n_worst)
-    ucb1 = UCB1(T, K, n_reps, "red", extr_ids, extr_rewards)
-    ucb1.plot(with_std)
-    # exp3 = EXP3(T, K, n_reps, "blue", extr_ids, extr_rewards)
-    # exp3.plot(with_std)
+def plot(T, K, n_reps, ids, rewards, n_worst, with_std=True, bmw=False):
+    if bmw:
+        extr_ids, extr_rewards = extract_bmw_rounds(K, ids, rewards, n_worst)
+        file_name ="plt_median.png"
+    else:
+        extr_ids, extr_rewards = extract_worst_rounds(K, ids, rewards, n_worst)
+        file_name ="plt_{}_worst.png".format(n_worst) 
+    # ucb1 = UCB1(T, K, n_reps, "red", extr_ids, extr_rewards)
+    # ucb1.plot(with_std)
+    exp3 = EXP3(T, K, n_reps, "blue", extr_ids, extr_rewards)
+    exp3.plot(with_std)
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
@@ -202,18 +231,6 @@ def plot(T, K, n_reps, ids, rewards, n_worst, with_std=False):
     plt.show()
     plt.clf()
 
-# def plot_v(T, K, n_reps, ids, rewards, with_stds=False):
-#     extr_ids, extr_rewards = extract_bmv(K, ids, rewards, n_worst)
-#     ucb1 = UCB1(T, K, n_reps, "red", extr_ids, extr_rewards)
-#     ucb1.plot(with_std)
-#     exp3 = EXP3(T, K, n_reps, "blue", extr_ids, extr_rewards)
-#     exp3.plot(with_std)
-#     plt.xlabel("t")
-#     plt.ylabel("regret")
-#     plt.legend()
-#     plt.savefig("plt_median.png".format(n_worst))
-#     # plt.show()
-#     plt.clf()
 
 # def copute_cached()
 
@@ -223,14 +240,14 @@ def main():
     ids = data[:,0].astype(int)
     click_rewards = data[:,1].astype(int)
     T = ids.shape[0]
-    # T = 2000
+    T = 2000
     K = 16
     n_reps = 1
     # n_reps = 1
     n_worst_s = [K-1,1,2,3]
-    inds, extr_rewards = extract_rounds(K, ids, click_rewards, 1)
+    # inds, extr_rewards = extract_rounds(K, ids, click_rewards, 1)
 
-    # plot(T, K, n_reps, ids, click_rewards, K-1)
+    plot(T, K, n_reps, ids, click_rewards, K-1)
 
     # for n_worst in n_worst_s:
     #     plot(T, K, n_reps, ids, click_rewards, n_worst)
