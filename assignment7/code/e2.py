@@ -192,7 +192,6 @@ class EXP3(Simulation):
             # sample hand based on p
             hand = np.random.choice(ps.shape[0], p=ps)
             # print(hand)
-            # hand = np.random.randint(self.K)
             # play the hand
             loss = self.play_hand(t, hand)
 
@@ -202,6 +201,42 @@ class EXP3(Simulation):
             Ns[hand] += 1
             regrets[t-1] = regrets[t-2] + loss
         return regrets
+
+
+class Random(Simulation):
+    def play_hand(self, t, a):
+        if self.arm_ids[t-1] == a:
+            return self.rewards[t-1] * self.K
+        else:
+            return 0
+
+    def calc_regrets(self):
+        def func():
+            acc = []
+            for i in range(self.K):
+                acc.append(np.sum(self.rewards[self.arm_ids == i]))
+            arr = np.array(acc)
+            best_id = np.argsort(arr)[-1]
+            best_rewards = np.copy(self.rewards)
+            best_rewards[self.arm_ids!=best_id] = 0
+            return np.cumsum(best_rewards) * self.K
+
+        best_rewards_cum = self.compute_cached("best_reward", func)[:self.T]
+        cum_reward = self.calc_reward(self.T, self.K)
+        return best_rewards_cum - cum_reward
+
+    def calc_reward(self, T, K):
+        # initialization
+        cum_reward = np.zeros(T)
+        # normal runs
+        for t in range(1, T+1):
+            # choose hand randomly
+            best_ind = np.random.randint(self.K)
+            # play the hand
+            reward = self.play_hand(t, best_ind)
+            # calculate the regret
+            cum_reward[t-1] = cum_reward[t-2] + reward
+        return cum_reward
 
 
 def load_cached(data_dir):
@@ -259,7 +294,7 @@ def plot(K_tot, n_reps, ids, rewards, n_worst=0, bmw=False, with_bound=False, wi
     title_tag = ""
     if with_bound:
         bound_tag = "_bound"
-        title_tag = " with bound"
+        title_tag = " with bound and random strategy"
     if bmw:
         extr_ids, extr_rewards = extract_bmw_rounds(K_tot, ids, rewards)
         file_name ="plt_median" + bound_tag + ".png"
@@ -283,6 +318,10 @@ def plot(K_tot, n_reps, ids, rewards, n_worst=0, bmw=False, with_bound=False, wi
     exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
     exp3.plot(ax, False, with_bound)
 
+    if with_bound:
+        rand = Random(K, n_reps, "yellow", extr_ids, extr_rewards)
+        rand.plot(ax, with_stds=False)
+
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
@@ -301,7 +340,7 @@ def main():
     ids = data[:,0].astype(int)
     click_rewards = data[:,1].astype(int)
     K = 16
-    n_reps = 4
+    n_reps = 1
 
     plot(K, n_reps, ids, click_rewards, bmw=True, with_bound=True)
 
