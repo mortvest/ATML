@@ -186,9 +186,9 @@ Which is the requirement of the \emph{compatibility condition}.\QEDA
 \label{subsec:21}
 I came up with following reasons for why this could be undesirable:
 \begin{itemize}
-\item It could be risky to execute an algorithm on unknown quality in a live environment.
-  This could potentially lead to monetary or other losses if the new
-  algorithm ends up being bad in practice. That could be partially avoided by
+\item It could be risky to execute an algorithm of unknown quality in a live
+  environment. Doing so could potentially lead to monetary or other losses if the new
+  algorithm ends up being bad in practice. That could be partially circumvented by
   using offline evaluation.
 \item The amount of feedback that could be generated in a live environment could
   be limited. If we use importance or rejection sampling, we can potentially run it on
@@ -282,8 +282,21 @@ while the regret bound becomes:
 \]
 
 \subsubsection*{b-d)}
+The only source of randomness in the modified UCB1 is the random tie breaking
+when choosing the best arm.
 
 \subsubsection*{e)}
+
+\section{Bonus: Make Your Own Question}
+\label{sec:3}
+\subsection{Question for Online Learning}
+I found the idea online learning strategy evaluation very exciting.
+Especially the one, where two strategies are made to play against each other.
+You could maybe implement a suboptimal strategy that plays a
+simple game. Then, the students would follow the provided instructions in order
+to implement a superior strategy. \\\\
+Maybe this specific idea is not viable, but an exercise about application of
+online learning algorithm to a real problem could be very interesting.
 
 \end{document}
 
