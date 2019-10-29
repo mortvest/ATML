@@ -42,8 +42,8 @@ class Simulation():
             ys = self.calc_bound()[xs-1]
             ax.plot(xs,
                      ys,
-                     label="{} - bound".format(label),
-                     color=self.color,
+                     label="bound of {}".format(label),
+                     color="green",
                      linestyle='dashed')
 
     def print_status(self):
@@ -135,15 +135,6 @@ class UCB1(Simulation):
 
 
 class EXP3(Simulation):
-    def play_hand(self, t, a):
-        if self.arm_ids[t-1] == a:
-            return (1 - self.rewards[t-1]) * self.K
-        else:
-            return 0
-
-    def __eta_t(self, K, t):
-        return np.sqrt(np.log(K)/(t * K**2.0))
-
     def calc_bound(self):
         def func():
             acc = []
@@ -151,23 +142,36 @@ class EXP3(Simulation):
                 bound = 2.0 * np.sqrt(self.K**2.0 * t * np.log(self.K))
                 acc.append(bound)
             return np.array(acc)
-        return self.compute_cached("bound", func)
+        return self.compute_cached("bound"+str(self.K), func)
 
     def calc_regrets(self):
         def func():
             acc = []
             for i in range(self.K):
-                acc.append(np.sum(1-self.rewards[self.arm_ids == i]))
+                acc.append(np.sum(self.rewards[self.arm_ids == i]))
             arr = np.array(acc)
-            best_id = np.argsort(arr)[0]
-            best_rewards = 1 - np.copy(self.rewards)
-            best_rewards[self.arm_ids!=best_id] = 1.0
+            # print(arr)
+            best_id = np.argsort(arr)[-1]
+            # print(best_id)
+            best_rewards = np.copy(self.rewards)
+            best_rewards[self.arm_ids!=best_id] = 0.0
+            best_rewards = 1 - best_rewards
+            # return np.cumsum(best_rewards) * self.K
             return np.cumsum(best_rewards) * self.K
 
         # best_loss_cum = self.compute_cached("best_losses", func)[:self.T]
         best_loss_cum = func()[:self.T]
         cum_loss = self.calc_loss(self.T, self.K)
         return cum_loss - best_loss_cum
+
+    def play_hand(self, t, a):
+        if self.arm_ids[t-1] == a:
+            return (1 - self.rewards[t-1]) * self.K
+        else:
+            return self.K
+
+    def __eta_t(self, K, t):
+        return np.sqrt(np.log(K)/(t * K**2.0))
 
     def calc_loss(self, T, K):
         # init data
@@ -196,9 +200,8 @@ class EXP3(Simulation):
             # update Ls
             Ls[hand] += l_wave
             Ns[hand] += 1
-            regrets[t-2] = regrets[t-1] + loss
+            regrets[t-1] = regrets[t-2] + loss
         return regrets
-
 
 
 def load_cached(data_dir):
@@ -211,11 +214,13 @@ def load_cached(data_dir):
         np.save(data_dir + ".npy", data)
         return data
 
+
 def arg_sort_rewards(K, ids, rewards):
     acc = []
     for a in range(K):
         acc.append(np.sum(rewards[ids == a]))
     return np.argsort(np.array(acc))
+
 
 def remap_ids(K, ids, inds, rewards):
     flags = np.isin(ids, inds)
@@ -228,6 +233,7 @@ def remap_ids(K, ids, inds, rewards):
         remapped_ids[remapped_ids == old_id] = new_id
     return remapped_ids, new_rewards
 
+
 def extract_worst_rounds(K, ids, rewards, n_worst):
     if n_worst == K-1:
         return ids, rewards
@@ -238,6 +244,7 @@ def extract_worst_rounds(K, ids, rewards, n_worst):
         n_worst_inds = arg_sort[:n_worst]
         inds = np.insert(n_worst_inds, 0, best_ind)
         return remap_ids(K, ids, inds, rewards)
+
 
 def extract_bmw_rounds(K, ids, rewards):
     arg_sort = arg_sort_rewards(K, ids, rewards)
@@ -256,7 +263,6 @@ def plot(K_tot, n_reps, ids, rewards, n_worst=0, bmw=False, with_bound=False, wi
     if bmw:
         extr_ids, extr_rewards = extract_bmw_rounds(K_tot, ids, rewards)
         file_name ="plt_median" + bound_tag + ".png"
-        print(title_tag)
         plot_title = "Best, median, worst arms" + title_tag
         K = 3
     else:
@@ -271,17 +277,20 @@ def plot(K_tot, n_reps, ids, rewards, n_worst=0, bmw=False, with_bound=False, wi
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
+    print("plotting:", plot_title)
     ucb1 = UCB1(K, n_reps, "red", extr_ids, extr_rewards)
     ucb1.plot(ax, with_std)
-    # exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
-    # exp3.plot(ax, False, with_bound)
+    exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
+    exp3.plot(ax, False, with_bound)
+
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
     plt.title(plot_title)
     # ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
-    print("saving", file_name)
-    # plt.savefig(file_name)
+
+    print("saving:", file_name)
+    plt.savefig(file_name)
     plt.show()
     plt.clf()
 
@@ -292,9 +301,8 @@ def main():
     ids = data[:,0].astype(int)
     click_rewards = data[:,1].astype(int)
     K = 16
-    n_reps = 1
+    n_reps = 4
 
-    # plot(K, n_reps, ids, click_rewards, K-1, with_bound=True)
     plot(K, n_reps, ids, click_rewards, bmw=True, with_bound=True)
 
     # n_worst_s = [K-1,1,2,3]
@@ -303,6 +311,7 @@ def main():
     #     plot(K, n_reps, ids, click_rewards, n_worst, with_bound=True)
     # plot(K, n_reps, ids, click_rewards, bmw=True)
     # plot(K, n_reps, ids, click_rewards, bmw=True, with_bound=True)
+
 
 if __name__ == "__main__":
     main()
