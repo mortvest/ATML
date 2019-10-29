@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 
 
 class Simulation():
@@ -12,7 +13,7 @@ class Simulation():
         self.arm_ids = arm_ids
         self.rewards = rewards
 
-    def plot(self, with_stds=True, with_bound=False):
+    def plot(self, ax, with_stds=True, with_bound=False):
         acc = []
         n_steps = min(self.T, 1000)
         xs = np.linspace(1, self.T, n_steps, dtype=int)
@@ -23,40 +24,30 @@ class Simulation():
         ys = np.mean(acc, axis=0)[xs-1]
         # main plot
         label = type(self).__name__
-        # plt.plot(xs, ys, label=label, color=self.color)
+        ax.plot(xs, ys, label=label, color=self.color)
         # plot + std
         if with_stds:
             std = np.std(acc, axis=0)[xs-1]
-            plt.plot(xs,
+            ax.plot(xs,
                      ys+std,
                      label="{} + STD".format(label),
                      color=self.color,
                      linestyle='dashed')
-            plt.plot(xs,
+            ax.plot(xs,
                      ys-std,
                      label="{} - STD".format(label),
                      color=self.color,
                      linestyle='dashed')
         if with_bound:
             ys = self.calc_bound()[xs-1]
-            plt.plot(xs,
+            ax.plot(xs,
                      ys,
                      label="{} - bound".format(label),
                      color=self.color,
                      linestyle='dashed')
 
-    def calc_regrets(self):
-        pass
-
-    def calc_bound(self):
-        pass
-
     def print_status(self):
         print("{} for K={}".format(self.label(), self.K))
-
-    def plot_bound(self, T, K):
-        """implement for each type of simulation"""
-        pass
 
     def updated_average(avg_old, N_old, reward):
         return (avg_old * N_old + reward) / float((N_old + 1))
@@ -73,6 +64,12 @@ class Simulation():
             result = func()
             np.save(label + ".npy", result)
             return result
+
+    def calc_regrets(self):
+        pass
+
+    def calc_bound(self):
+        pass
 
 
 class UCB1(Simulation):
@@ -94,14 +91,12 @@ class UCB1(Simulation):
             return np.cumsum(best_rewards) * self.K
 
         best_rewards_cum = self.compute_cached("best_reward", func)[:self.T]
-        # best_rewards_cum = func()[:self.T]
         cum_reward = self.calc_reward(self.T, self.K)
         return best_rewards_cum - cum_reward
 
     def __min_arg(self, avgs, random_ties):
         if random_ties:
             min_val = np.min(avgs)
-            # min_args = np.argwhere(np.isclose(avgs, min_val)).flatten()
             min_args = np.argwhere(avgs == min_val).flatten()
             return np.random.choice(min_args, 1)[0]
         else:
@@ -152,7 +147,7 @@ class EXP3(Simulation):
     def calc_bound(self):
         def func():
             acc = []
-            for t in range(1,self.T+1):
+            for t in range(1, self.T+1):
                 bound = 2.0 * np.sqrt(self.K**2.0 * t * np.log(self.K))
                 acc.append(bound)
             return np.array(acc)
@@ -253,23 +248,40 @@ def extract_bmw_rounds(K, ids, rewards):
 
 
 def plot(K_tot, n_reps, ids, rewards, n_worst=0, bmw=False, with_bound=False, with_std=True):
+    bound_tag = ""
+    title_tag = ""
+    if with_bound:
+        bound_tag = "_bound"
+        title_tag = " with bound"
     if bmw:
         extr_ids, extr_rewards = extract_bmw_rounds(K_tot, ids, rewards)
-        file_name ="plt_median.png"
+        file_name ="plt_median" + bound_tag + ".png"
+        print(title_tag)
+        plot_title = "Best, median, worst arms" + title_tag
         K = 3
     else:
         extr_ids, extr_rewards = extract_worst_rounds(K_tot, ids, rewards, n_worst)
-        file_name ="plt_{}_worst.png".format(n_worst)
+        file_name = "plt_{}_worst".format(n_worst) + bound_tag + ".png"
+        if n_worst == K_tot - 1:
+            plot_title = "All arms" + title_tag
+        else:
+            plot_title = "Best + {} worst arms".format(n_worst) + title_tag
         K = n_worst + 1
-    # ucb1 = UCB1(K, n_reps, "red", extr_ids, extr_rewards)
-    # ucb1.plot(with_std)
-    exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
-    exp3.plot(False, with_bound)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    ucb1 = UCB1(K, n_reps, "red", extr_ids, extr_rewards)
+    ucb1.plot(ax, with_std)
+    # exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
+    # exp3.plot(ax, False, with_bound)
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
-    print("plotting", file_name)
-    # plt.savefig("plt_{}_worst.png".format(n_worst))
+    plt.title(plot_title)
+    # ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
+    print("saving", file_name)
+    # plt.savefig(file_name)
     plt.show()
     plt.clf()
 
@@ -282,12 +294,15 @@ def main():
     K = 16
     n_reps = 1
 
-    plot(K, n_reps, ids, click_rewards, K-1, with_bound=True)
+    # plot(K, n_reps, ids, click_rewards, K-1, with_bound=True)
+    plot(K, n_reps, ids, click_rewards, bmw=True, with_bound=True)
 
     # n_worst_s = [K-1,1,2,3]
     # for n_worst in n_worst_s:
     #     plot(K, n_reps, ids, click_rewards, n_worst)
+    #     plot(K, n_reps, ids, click_rewards, n_worst, with_bound=True)
     # plot(K, n_reps, ids, click_rewards, bmw=True)
+    # plot(K, n_reps, ids, click_rewards, bmw=True, with_bound=True)
 
 if __name__ == "__main__":
     main()
