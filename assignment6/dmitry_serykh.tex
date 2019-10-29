@@ -30,7 +30,7 @@
   breaklines=true,
   basicstyle=\small
 }
-\renewcommand{\thesubsubsection}{\alph{subsubsection}}
+%% \renewcommand{\thesubsubsection}{\alph{subsubsection}}
 \newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
 \newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
 \newcommand{\avg}[1]{\sum_{i=1}^{#1}X_i}
@@ -47,6 +47,38 @@
 \maketitle
 \section{CMA-ES for Reinforcement Learning}
 \label{sec:1}
+\subsection{}
+\label{subsec:11}
+\subsubsection{}
+Yes, it is possible. Even when I set the number of hidden neurons to 1, I get
+good training results with 5-7 iterations.
+
+\subsubsection{}
+Adding more hidden neurons make the learning task easier in regards to the
+running time. However, for such simple task it is not easy to determine because
+the runtime could be dominated by other factors rather that the learning itself.
+
+\subsection{}
+\label{subsec:12}
+It does not make sense to add bias parameter. Form the experimental perspective,
+it increases the running time of the task. For \texttt{no\_neurons=10}, it
+doubles the running time, for much higher values of \texttt{no\_neurons}, the
+increase in running time becomes larger. From the conceptual perspective, the bias is
+not necessary, since the function we are trying to learn goes through the
+origin, and adding bias unnecessarily expands the hypothesis space.
+
+\subsection{}
+\label{subsec:13}
+I have an eigendecomposition of covariance matrix $\bs{C}$:
+\[
+\bs{C} = \bs{B}\bs{D}^2\bs{B}^T
+\]
+Then, the entries in the diagonal matrix $\bs{D}$ would encapsulate the
+magnitude of the matrix in each coordinate direction. I will exploit that by comparing
+each of the entries with $\sigma_{\operatorname{minstd}}$, and if any of the
+entries get bellow $\sigma_{\operatorname{minstd}}$, I would set it to
+$\sigma_{\operatorname{minstd}}$ instead. This way, the standard deviation would not fall
+below the threshold in any of the coordinate directions.
 
 \section{Tighter analysis of the Hedge algorithm}
 \label{sec:2}
@@ -180,18 +212,19 @@ Then, we can use the results from previous subsection and get:
 
 \section{Empirical evaluation of algorithms for adversarial environments}
 \label{sec:4}
-It is relatively easy to show that an algorithm is bad in the adversarial
-  environment. I made something very similar in Subsection \ref{subsec:52}.
-  I showed that UCB1 can exhibit linear regret for a specially constructed
-  sequence of rewards/losses. However, it says nothing about the difficulty of
-  constructing such sequence, which could be very challenging.\\\\
+Conceptually, it is relatively easy to show that an algorithm is bad in the
+adversarial environment. I made something very similar in Subsection
+\ref{subsec:52}. I showed that UCB1 can exhibit linear regret for a specially
+constructed sequence of rewards/losses. However, it says nothing about the
+difficulty of constructing such sequence, which could be very challenging.\\\\
 However, it is clear that it is almost impossible to experimentally show that an
-  algorithm is good in an adversarial environment. I showed in Subsection
-  \ref{subsec:52} that EXP3 performs significantly better for a specific
-  sequence of rewards that was designed to break UCB1. However, this does not
-  mean that EXP3 performs good for all such sequences. The quality of such
-  algorithms can only be shown with a formal proof.
-
+algorithm is good in an adversarial environment. I showed in Subsection
+\ref{subsec:52} that EXP3 performs significantly better for a specific
+sequence of rewards that was designed to break UCB1. However, this does not
+mean that EXP3 performs good for all such sequences. In fact, no number of such
+experiments would. The quality of an algorithm in an adversarial environment
+can only be shown with a formal proof.
+  
 \section{Empirical comparison of UCB1 and EXP3 algorithms}
 \label{sec:5}
 \subsection{Evaluation}

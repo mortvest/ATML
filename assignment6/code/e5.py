@@ -184,18 +184,18 @@ def plot(T, mu_star, K, mu, n_reps, with_stds=True):
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
-    plt.title(r"$\mu={}, K={}$".format(mu, K))
-    # plt.savefig("plt_k{}_mu{}".format(K, mu).replace(".","") + ".png")
+    # plt.title(r"$\mu={}, K={}$".format(mu, K))
+    plt.savefig("plt_k{}_mu{}".format(K, mu).replace(".","") + ".png")
     plt.show()
     plt.clf()
 
-def plot_adv(T, K, n_reps, adv_seq):
+def plot_adv(T, K, n_reps):
     if debug: print("Plotting ADV for K={}".format(K))
     # create adv_sequence
     adv_seq = create_adv_seq(T, K)
     # define plot types
     plots = [UCB1_notes(T, 0, 0, K, n_reps, "red", adv_seq),
-             EXP3(T, 1/2, 0.05, K, n_reps, "green", adv_seq)]
+             EXP3(T, 1/2, 0.0375, 16, n_reps, "green", adv_seq)]
     # plot each type
     plots[0].plot_adv()
     plots[1].plot(with_stds=False)
@@ -252,7 +252,7 @@ def main():
     #         plot(T, mu_star, K, mu, n_reps)
 
     # adversarial
-    plot_adv(T, Ks[0], n_reps, adv_seq)
+    plot_adv(T, Ks[0], n_reps)
 
 
 if __name__ == "__main__":

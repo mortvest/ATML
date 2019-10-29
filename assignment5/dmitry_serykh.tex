@@ -29,7 +29,7 @@
   breaklines=true,
   basicstyle=\small
 }
-
+\renewcommand{\thesubsubsection}{\alph{subsubsection}}
 \newcommand{\prob}[1]{\mathbb{P}\left(#1\right)}
 \newcommand{\expect}[1]{\mathbb{E}\left(#1\right)}
 \newcommand{\avg}[1]{\sum_{i=1}^{#1}X_i}
@@ -38,20 +38,162 @@
 \newcommand{\dotpr}[2]{\langle #1,\; #2 \rangle}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 \newcommand*{\QEDA}{\hfill\ensuremath{\blacksquare}}%
+\newcommand*{\bs}[1]{\boldsymbol{#1}}
+
 
 \title{\vspace{-5cm}ATML Home Assignment 5}
 \author{Dmitry Serykh (qwl888)}
 
 \begin{document}
 \maketitle
+
 \section{Q-learning in TensorFlow}
 \label{sec:1}
+\subsection*{Question 1.1: Understanding the code}
+\label{subsec:11}
+
+\subsection*{Question 1.1: Modifying the code}
+\label{subsec:12}
+
 
 \section{CMA Background}
 \label{sec:2}
+\subsection{}
+\label{subsec:21}
+\subsubsection{}
+One way of defining the rank of a matrix is as the maximum number of linearly independent
+column rows in the matrix. The outer product
+between a column vector and itself transposed would yield n dependent rows.
+\[
+\operatorname{rank}(\boldsymbol{C}) = 1
+\]
+\subsubsection{}
+\begin{align*}
+  \bs{Ca}
+  &=\bs{aa}^T\bs{a}\\
+  &=\bs{a}\cdot\operatorname{tr}(aa^T)\\
+  &=\bs{a}\cdot\operatorname{tr}(C) 
+\end{align*}
+The second equality holds because the value of trace equals the inner product of
+column vectors.
+Trace of a matrix is a scalar value, hence $\bs{a}$ is the eigenvector of $C$,
+and the value of eigenvalue is $\operatorname{tr}(C) = \bs{a}^T\bs{a}$.
+
+\subsection{}
+\label{subsec:22}
+I assume that the x vectors are independent, hence:
+\subsubsection{}
+\label{subsubsec:221}
+%% \[
+%% \boldsymbol{z}=\sum_{i=1}^{m} \boldsymbol{x}_{i}
+%% \]
+\[
+\bs{z} \sim \mathcal{N}(\bs{0}, m\cdot \bs{I})
+\]
+\subsubsection{}
+\label{subsubsec:222}
+\[
+\bs{z}_w \sim \mathcal{N}(\bs{0}, \sum_{i=1}^{m}w_i\cdot \bs{I})
+\]
+\subsubsection{}
+\label{subsubsec:223}
+
+\subsection{}
+\label{subsec:23}
+\begin{align*}
+  (1-c)\bs{a} &\sim \mathcal{N}(\bs{0}, (1-c)^2\cdot \bs{I})\\
+  \sqrt{c(2-c)}\bs{b} &\sim \mathcal{N}(\bs{0}, c(2-c)\cdot \bs{I})\\
+  \bs{a} + \bs{b} &\sim \mathcal{N}(\bs{0}, ((1-c)^2 + c(2-c))\cdot \bs{I})\\
+  &\;=\mathcal{N}(\bs{0}, (1-2c +c^2 + 2c-c^2) \cdot \bs{I})\\
+  &\;=\mathcal{N}(\bs{0}, \bs{I})
+\end{align*}
 
 \section{Introduction of New Products}
 \label{sec:3}
+I propose a following algorithm:
+\begin{enumerate}
+\item Sell the new product once:
+\item Then for $t=2,3,...$ sell the new product if:
+  \[
+  0.5 <\hat{\mu}_{t-1}(a_{new})+\sqrt{\frac{3 \ln t}{2 N_{t-1}(a_{new})}}
+  \]
+  Otherwize, sell the old product
+\end{enumerate}
+Then, I will attempt to bound the pseudo regret. This online learning problem is
+an iid problem with bandit feedback and unknown $T$, hence I can use a similar
+proof to UCB from the lecture notes.\\\\
+\textbf{First case}: $\Delta > 0$, hence the old product is the optimal
+one:\\\\
+This case is almost identical to the analysis of UCB. The only difference is
+that there is not an upper confidence bound on the old product, hence I don't
+have to consider $F(a^*)$: the number of times when:
+\[
+U_t(a^*) \geq \mu_{a^*}
+\]
+Therefore, the pseudo regret for this case could be bounded by:
+\[
+\bar{R}_{T} \leq \left( \frac{6\ln
+  T}{\Delta(a)}+1+\frac{\pi^{2}}{6}\right)\Delta
+\]
+\textbf{Second case}: $\Delta < 0$, (new product is the optimal one):\\\\
+This case is different from the previous one, in that the structure of the UCB
+proof can not be applied here. I will use a different method, but still take
+some steps from it.\\
+By the definition we have:
+\begin{align*}
+  \Delta &= 0.5 - \mu_{a_{new}}\\
+  \Delta &= \mu_{a_{old}} - \mu_{a_{new}}\\
+  \mu_{a_{old}} &= \Delta + \mu_{a_{new}}
+\end{align*}
+My algorithm would pick the wrong action when:
+\[
+U_t(a_{new}) \leq \mu_{a_{old}}
+\]
+Hence I wish to bound the number of times when it happens.
+\begin{align*}
+U_t(a_{new}) &\leq \mu_{a_{old}}\\
+\hat{\mu}_{t-1}(a_{new})+ \sqrt{\frac{3 \ln t}{2 N_{t-1}(a_{new})}}
+&\leq \Delta + \mu_{a_{new}}\\
+\hat{\mu}_{t-1}(a_{new}) -  \mu_{a_{new}}
+&\leq \Delta -
+\sqrt{\frac{3 \ln t}{2 N_{t-1}(a_{new})}}\\
+ \mu_{a_{new}}-\hat{\mu}_{t-1}(a_{new})  
+&\leq \sqrt{\frac{3 \ln t}{2 N_{t-1}(a_{new})}} - \Delta
+\end{align*}
+Since $\Delta < 0$, the value of $\sqrt{\frac{3 \ln t}{2 N_{t-1}(a_{new})}} - \Delta$
+would always be positive, hence I can use Hoeffding's inequality to bound the
+probability. I would also use the trick from the notes in order to avoid dealing with
+$N_{t-1}(a)$ which is not independent of $\hat{\mu_{t-1}}$:
+\begin{align*}
+  \mathbb{P}\left(
+  \mu_{new}-\hat{\mu}_{t-1}(a_{new})
+  \geq
+  \sqrt{\frac{3 \ln t}{2 N_{t-1}\left(a_{new}\right)}} - \Delta
+  \right)
+  &\leq
+  \mathbb{P}\left(\exists s: \mu_{a_{new}}-\bar{\mu}_{s} \geq \sqrt{\frac{3 \ln
+      t}{2 s}} - \Delta\right)\\
+  &\leq
+  \sum_{s=1}^{t} \mathbb{P}\left(\mu_{a_{new}}-\bar{\mu}_{s} \geq
+  \sqrt{\frac{3 \ln t}{2 s}} - \Delta\right)\\
+  &=\sum_{s=1}^{t} 
+  \operatorname{exp}\left(-2s\left(\sqrt{\frac{3\ln{t}}{2s}}-
+    \Delta\right)^2\right)\\
+  &=\sum_{s=1}^{t} 
+  \frac{1}{2t^3\Delta^2} \cdot e^{-2s\cdot \sqrt{\frac{3\ln{t}}{2s}}}
+\end{align*}
+Sadly, I got stuck here and don't know how to simplify this expression ($\delta$). But I
+would proceed by finding the expectation:
+\[
+\expect{\delta} = \sum_{t=2}^T \sum_{s=1}^{t} 
+  \frac{1}{2t^3\Delta^2} \cdot e^{2s\cdot \sqrt{\frac{3\ln{t}}{2s}}}
+\]
+Then my bound on the pseudo regret would be as follows:
+\[
+\bar{R}_{T} \leq \frac{1}{2\Delta}\sum_{t=2}^T\sum_{s=1}^{t} 
+  \frac{e^{2s\cdot \sqrt{\frac{3\ln{t}}{2s}}}}{t^3} 
+\]
+
 
 \section{Empirical Comparison of FTL and Hedge}
 \label{sec:4}
