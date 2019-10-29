@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 class Simulation():
     """abstract class"""
-    def __init__(self, T, K, n_reps, color, arm_ids, rewards):
-        self.T = T
+    def __init__(self, K, n_reps, color, arm_ids, rewards):
+        self.T = arm_ids.shape[0]
         self.K = K
         self.n_reps = n_reps
         self.color = color
@@ -14,18 +14,19 @@ class Simulation():
 
     def plot(self, with_stds=True):
         acc = []
-        xs = np.linspace(self.K, self.T, self.T, dtype=int)
+        n_steps = min(self.T, 1000)
+        xs = np.linspace(1, self.T, n_steps, dtype=int)
         for _ in range(self.n_reps):
             x = self.calc_regrets()
             acc.append(x)
         acc = np.array(acc)
-        ys = np.mean(acc, axis=0)
+        ys = np.mean(acc, axis=0)[xs-1]
         # main plot
         label = type(self).__name__
         plt.plot(xs, ys, label=label, color=self.color)
         # plot + std
         if with_stds:
-            std = np.std(acc, axis=0)
+            std = np.std(acc, axis=0)[xs-1]
             plt.plot(xs,
                      ys+std,
                      label="{} + STD".format(label),
@@ -196,43 +197,63 @@ def load_cached(data_dir):
         np.save(data_dir + ".npy", data)
         return data
 
-
-def extract_worst_rounds(K, ids, rewards, n_worst):
-    # TODO: replace with 0...n
+def arg_sort_rewards(K, ids, rewards):
     acc = []
     for a in range(K):
         acc.append(np.sum(rewards[ids == a]))
-    arg_sort = np.argsort(np.array(acc))
-    best_ind = arg_sort[-1]
-    n_worst = arg_sort[:n_worst]
-    inds = np.insert(n_worst, 0, best_ind)
-    flags = np.isin(ids, inds)
+    return np.argsort(np.array(acc))
 
+def remap_ids(K, ids, inds, rewards):
+    flags = np.isin(ids, inds)
     new_ids = ids[flags]
     new_rewards = rewards[flags]
-    return new_ids, new_rewards
 
+    remapped_ids = new_ids + K
+    for new_id in range(inds.shape[0]):
+        old_id = inds[new_id] + K
+        remapped_ids[remapped_ids == old_id] = new_id
+    return remapped_ids, new_rewards
 
-def plot(T, K, n_reps, ids, rewards, n_worst, with_std=True, bmw=False):
-    if bmw:
-        extr_ids, extr_rewards = extract_bmw_rounds(K, ids, rewards, n_worst)
-        file_name ="plt_median.png"
+def extract_worst_rounds(K, ids, rewards, n_worst):
+    if n_worst == K-1:
+        return ids, rewards
     else:
-        extr_ids, extr_rewards = extract_worst_rounds(K, ids, rewards, n_worst)
-        file_name ="plt_{}_worst.png".format(n_worst) 
-    # ucb1 = UCB1(T, K, n_reps, "red", extr_ids, extr_rewards)
-    # ucb1.plot(with_std)
-    exp3 = EXP3(T, K, n_reps, "blue", extr_ids, extr_rewards)
-    exp3.plot(with_std)
+        arg_sort = arg_sort_rewards(K, ids, rewards)
+        best_ind = arg_sort[-1]
+
+        n_worst_inds = arg_sort[:n_worst]
+        inds = np.insert(n_worst_inds, 0, best_ind)
+        return remap_ids(K, ids, inds, rewards)
+
+def extract_bmw_rounds(K, ids, rewards):
+    arg_sort = arg_sort_rewards(K, ids, rewards)
+    best_ind, median_ind, worst_ind = arg_sort[-1], arg_sort[int(K/2)], arg_sort[0]
+
+    inds = np.array([best_ind, median_ind, worst_ind])
+    return remap_ids(K, ids, inds, rewards)
+
+
+def plot(T, K_tot, n_reps, ids, rewards, n_worst, with_std=True, bmw=False):
+    if bmw:
+        extr_ids, extr_rewards = extract_bmw_rounds(K_tot, ids, rewards)
+        file_name ="plt_median.png"
+        K = 3
+    else:
+        extr_ids, extr_rewards = extract_worst_rounds(K_tot, ids, rewards, n_worst)
+        file_name ="plt_{}_worst.png".format(n_worst)
+        K = n_worst + 1
+    ucb1 = UCB1(K, n_reps, "red", extr_ids, extr_rewards)
+    ucb1.plot(with_std)
+    # exp3 = EXP3(K, n_reps, "blue", extr_ids, extr_rewards)
+    # exp3.plot(with_std)
     plt.xlabel("t")
     plt.ylabel("regret")
     plt.legend()
+    print("plotting", file_name)
     # plt.savefig("plt_{}_worst.png".format(n_worst))
     plt.show()
     plt.clf()
 
-
-# def copute_cached()
 
 def main():
     data_dir = "./data_preprocessed_features"
@@ -247,7 +268,7 @@ def main():
     n_worst_s = [K-1,1,2,3]
     # inds, extr_rewards = extract_rounds(K, ids, click_rewards, 1)
 
-    plot(T, K, n_reps, ids, click_rewards, K-1)
+    plot(T, K, n_reps, ids, click_rewards, 2)
 
     # for n_worst in n_worst_s:
     #     plot(T, K, n_reps, ids, click_rewards, n_worst)
